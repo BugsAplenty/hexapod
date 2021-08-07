@@ -4,81 +4,76 @@ using UnityEngine;
 
 public class HexapodLeg
 {
-    private GameObject _obj;
-    private float _angleTouchDown;
-    private float _angleLiftOff;
+    public GameObject obj;
+    public float angleTouchDown;
+    public float angleLiftOff;
     public HingeJoint joint;
-    public JointMotor motor;
-    private float resAngle =100;
     
     public HexapodLeg(string name, float angleLiftOff, float angleTouchDown, float force)
     {
-        _obj = GameObject.Find(name);
+        this.obj = GameObject.Find(name);
         Debug.Log($"{name} found.");
-        joint = _obj.GetComponent<HingeJoint>();
-        joint.useMotor = true;
+        this.joint = this.obj.GetComponent<HingeJoint>();
+        this.joint.useMotor = true;
+        this.joint.useLimits = true;
         SetMotorParams();
     }
     private void SetMotorParams()
     {
         JointMotor legMotor = joint.motor;
         legMotor.force = 1000;
-        joint.motor = legMotor;
+        this.joint.motor = legMotor;
     }
     public void Rotate(float vel)
     {
-        JointMotor legMotor = joint.motor;
+        JointMotor legMotor = this.joint.motor;
         legMotor.targetVelocity = vel;
-        joint.motor = legMotor;
-        Debug.Log(joint.angle);
+        this.joint.motor = legMotor;
     }
     public void Stop()
     {
         Rotate(0);
     }
-    private bool IsCounterClockWise()
-    {
-        Vector3 vecCounterClockWise = new Vector3(1,1,1);
-        return (_obj.transform.localScale == vecCounterClockWise);
-    }
+
     public void MoveTo(float vel, float angle)
     {
-        float trueVel;
-        if (IsCounterClockWise())
-        {
-            trueVel = vel;
-        } else {
-            trueVel = -vel;
-        }
-        if (Mathf.Abs(joint.angle - angle) > resAngle) 
-        {
-            // Debug.Log(joint.angle-angle);
-            Rotate(trueVel);
-        } else {
-            Stop();
-        }
+        SetGoalAngle(angle);
+        Rotate(vel);
+
     }
-    public void MoveToOptimal(float vel, float angle)
+    public void SetGoalAngle(float angle)
     {
-        float dAngle = joint.angle - angle;
-        Debug.Log(dAngle);
-        if (dAngle > 180)
+        if (this.IsReverse())
         {
-            MoveTo(vel, angle);
-        } else if (dAngle < -180) {
-            MoveTo(vel, angle);
+            JointLimits limits = this.joint.limits;
+            limits.max = angle;
+            this.joint.limits = limits;
         } else {
-            MoveTo(-vel, angle);
+            JointLimits limits = this.joint.limits;
+            limits.min = angle;
+            this.joint.limits = limits;
         }
     }
+
     public bool IsTouchDown()
     {
-        if (_angleLiftOff > _angleTouchDown)
+        if (this.angleLiftOff > this.angleTouchDown)
         {
-            return joint.angle > _angleTouchDown && joint.angle < _angleLiftOff;
+            return this.joint.angle > this.angleTouchDown && this.joint.angle < this.angleLiftOff;
         } else {
-            return joint.angle > _angleLiftOff && joint.angle < _angleTouchDown;
+            return this.joint.angle > this.angleLiftOff && this.joint.angle < this.angleTouchDown;
+        }
+    }
+    private bool IsReverse()
+    {
+        if (this.joint.axis.z == -1)
+        {
+            return false;
+        } else {
+            return true;
         }
     }
 }
+
+
 

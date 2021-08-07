@@ -36,12 +36,12 @@ public class HexapodController : MonoBehaviour
     }
     void Update()
     {
-        leftBack.MoveToOptimal(500, 15);
-        leftFront.MoveToOptimal(500 ,0);
-        leftMiddle.MoveToOptimal(500 ,0);
-        rightFront.MoveToOptimal(500 ,0);
-        rightMiddle.MoveToOptimal(500 ,0);
-        rightBack.MoveToOptimal(500 ,0);
+        leftBack.MoveTo(500, 90);
+        leftFront.MoveTo(500, 90);
+        leftMiddle.MoveTo(500, 90);
+        rightFront.MoveTo(500, 90);
+        rightMiddle.MoveTo(500, 90);
+        rightBack.MoveTo(500, 90);
     }
     void Walk(float velForward)
     {
