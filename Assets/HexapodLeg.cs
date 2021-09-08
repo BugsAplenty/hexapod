@@ -30,28 +30,40 @@ public class HexapodLeg
         legMotor.targetVelocity = vel;
         this.joint.motor = legMotor;
     }
-    public void Stop()
-    {
-        Rotate(0);
-    }
-
     public void MoveTo(float vel, float angle)
     {
-        SetGoalAngle(angle);
-        Rotate(vel);
-
+        this.SetGoalAngle(angle);
+        this.Rotate(vel);
     }
+    public void MoveToOptimal(float vel, float angle)
+    {
+        this.SetGoalAngle(angle);
+        if (Mathf.Abs(angle - this.joint.angle) < 180) 
+        {
+            this.Rotate(vel);
+        } else {
+            this.Rotate(-vel);
+        }
+    }
+
     public void SetGoalAngle(float angle)
     {
-        if (this.IsReverse())
+        JointLimits limits = this.joint.limits;
+        if (angle < this.joint.angle) 
         {
-            JointLimits limits = this.joint.limits;
-            limits.max = angle;
-            this.joint.limits = limits;
-        } else {
-            JointLimits limits = this.joint.limits;
             limits.min = angle;
-            this.joint.limits = limits;
+        } else {
+            limits.max = angle;
+        }
+        this.joint.limits = limits;
+    }
+    public void Walk(float velTouchDown, float velLiftOff)
+    {
+        if (this.IsTouchDown())
+        {
+            this.MoveTo(velTouchDown, angleLiftOff);
+        } else {
+            this.MoveTo(velLiftOff, angleTouchDown);
         }
     }
 

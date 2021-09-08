@@ -7,7 +7,7 @@ public class HexapodController : MonoBehaviour
 {
     // Controller parameters.
     private static float motorForce = 1000;
-    private static float velForward = 200; // TODO: Temporary value.
+    private static float velForward = 200f; // TODO: Temporary value.
     private static float velTurn = 100; // TODO: Temporary value.
     private static float velReverse = 100; // TODO: Temporary value.
     private static float velControl = 1000; // TODO: Temporary value.
@@ -32,24 +32,29 @@ public class HexapodController : MonoBehaviour
         rightFront = new HexapodLeg("HexapodLegRightFront", angleLiftOffRight, angleTouchDownRight, motorForce);
         leftBack = new HexapodLeg("HexapodLegLeftBack", angleLiftOffLeft, angleTouchDownLeft, motorForce);
         rightBack = new HexapodLeg("HexapodLegRightBack", angleLiftOffRight, angleTouchDownRight, motorForce);
+        HexapodLeg[] inverseLegs = new HexapodLeg[] {leftFront, leftBack, leftMiddle};
+        foreach (HexapodLeg leg in inverseLegs)
+        {
+            leg.obj.transform.forward = -leg.obj.transform.forward;
+        }
         Debug.Log("All legs located successfully.");
     }
     void Update()
     {
-        leftBack.MoveTo(500, 90);
-        leftFront.MoveTo(500, 90);
-        leftMiddle.MoveTo(500, 90);
-        rightFront.MoveTo(500, 90);
-        rightMiddle.MoveTo(500, 90);
-        rightBack.MoveTo(500, 90);
+        Stand();
     }
-    void Walk(float velForward)
+    void Walk(float velTouchDown)
     {
-        
+        leftBack.Walk(velTouchDown, velTouchDown * velBoost);
     }
-    void Stop()
+    void Stand() 
     {
-        
+        leftBack.MoveToOptimal(500, 100);
+        leftFront.MoveToOptimal(500, 100);
+        leftMiddle.MoveToOptimal(500, 100);
+        rightFront.MoveToOptimal(500, 100);
+        rightMiddle.MoveToOptimal(500, 100);
+        rightBack.MoveToOptimal(500,100);
     }
     void TurnLeft(float velTurn)
     {
