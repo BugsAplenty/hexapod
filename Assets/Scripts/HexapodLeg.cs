@@ -14,6 +14,8 @@ public class HexapodLeg : MonoBehaviour
     [SerializeField] float angleLiftOff;
     [SerializeField] float motorForce = 1000f;
     [SerializeField] InversionGroup Group;
+
+    //Remove HingeJoint and its dependancies//
     private HingeJoint joint;
     private JointMotor legMotor;
 
