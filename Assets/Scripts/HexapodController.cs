@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,13 +10,25 @@ public class HexapodController : MonoBehaviour
 
     private void Awake()
     {
-        Legs = LegSetup();
-        
+        Legs = LegSetup();      
     }
 
     private void Update()
     {
         MoveForward();
+        StopMovement();
+    }
+
+    private void StopMovement()
+    {
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            Debug.Log("Trying to stop rotation");
+            foreach(HexapodLeg leg in Legs)
+            {
+                leg.StopRotation();
+            }
+        }
     }
 
     private void MoveForward()
@@ -25,7 +38,7 @@ public class HexapodController : MonoBehaviour
             Debug.Log("Trying to move Forward");
             foreach (HexapodLeg leg in Legs)
             {
-                leg.MoveTo(500, 30);
+                leg.ContinualRotation(90);
             }
         }
     }
@@ -37,7 +50,7 @@ public class HexapodController : MonoBehaviour
         {
             if (child.tag == "LegAnchor")
             {
-                LegHolder.Add(child.GetChild(0).GetComponent<HexapodLeg>());
+                LegHolder.Add(child.GetChild(0).GetComponent<HexapodLeg>());               
             }
         }
         return LegHolder.ToArray();

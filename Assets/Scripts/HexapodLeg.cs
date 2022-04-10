@@ -28,35 +28,65 @@ public class HexapodLeg : MonoBehaviour
     private void JointSetup()
     {
         joint = GetComponent<HingeJoint>();
-        joint.useMotor = true;
-        joint.useLimits = true;
         legMotor.force = motorForce;
         joint.motor = legMotor;
+        joint.useMotor = true;
+        if (Group == InversionGroup.B)
+        {
+            transform.parent.Rotate(180, 0, 0);
+        }
     }
 
-    public void Rotate(float velocity)
+    public void ContinualRotation(float velocity)
     {
+        legMotor.force = motorForce;
         legMotor.targetVelocity = velocity;
+        legMotor.freeSpin = false;
         joint.motor = legMotor;
+        joint.useLimits = false;
     }
 
-    public void MoveTo(float velocity, float angle)
-    {
-        SetGoalAngle(angle);
-        Rotate(velocity);
+    public void StopRotation()
+    {   
+
+        legMotor.targetVelocity = 0;
+        joint.motor = legMotor;
+        joint.limits = SetLimit();
+        joint.useLimits = true;
     }
 
-    private void SetGoalAngle(float angle)
+    private JointLimits SetLimit()
     {
-        JointLimits limits = joint.limits;
-        if (angle < joint.angle)
-        {
-            limits.min = angle;
-        }
-        else
-        {
-            limits.max = angle;
-        }
-        joint.limits = limits;
+        JointLimits limits = new JointLimits();
+        limits.max = joint.angle + 10f;
+        limits.min = joint.angle - 2f;
+        return limits;
     }
+
+    //private void SetGoalAngle(float angle)
+    //{
+    //    JointLimits limits = joint.limits;
+    //    if (angle < joint.angle)
+    //    {
+    //        limits.min = angle;
+    //    }
+    //    else
+    //    {
+    //        limits.max = angle;
+    //    }
+    //    joint.limits = limits;
+    //}
+
+    //public void Rotate(float velocity)
+    //{
+    //    legMotor.targetVelocity = velocity;
+    //    joint.motor = legMotor;
+    //}
+
+    //public void MoveTo(float velocity, float angle)
+    //{
+    //    SetGoalAngle(angle);
+    //    Rotate(velocity);
+    //}
+
 }
