@@ -8,6 +8,9 @@ TagManager:
   - RhexLegLeft
   - RhexLeg
   - LegAnchor
+  - Hexapod
+  - TargetVelocity
+  - LegList
   layers:
   - Default
   - TransparentFX

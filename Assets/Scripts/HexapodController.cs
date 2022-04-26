@@ -55,4 +55,9 @@ public class HexapodController : MonoBehaviour
         }
         return LegHolder.ToArray();
     }
+
+    public HexapodLeg[] GetLegList()
+    {
+        return Legs;
+    }
 }

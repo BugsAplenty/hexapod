@@ -15,7 +15,6 @@ public class HexapodLeg : MonoBehaviour
     [SerializeField] float motorForce = 1000f;
     [SerializeField] InversionGroup Group;
 
-    //Remove HingeJoint and its dependancies//
     private HingeJoint joint;
     private JointMotor legMotor;
 
@@ -61,6 +60,16 @@ public class HexapodLeg : MonoBehaviour
         limits.max = joint.angle + 10f;
         limits.min = joint.angle - 2f;
         return limits;
+    }
+
+    public float TargetVelocity()
+    {
+        return legMotor.targetVelocity;
+    }
+
+    public float Velocity()
+    {
+        return joint.velocity;
     }
 
     //private void SetGoalAngle(float angle)
