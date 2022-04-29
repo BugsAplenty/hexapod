@@ -165,6 +165,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   angleTouchDown: 0
   angleLiftOff: 0
-  motorForce: 0
+  motorForce: 1000
   Group: 0
-  objRef: {fileID: 0}
