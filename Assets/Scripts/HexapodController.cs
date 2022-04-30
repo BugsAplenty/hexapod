@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using UnityEngine;
 
@@ -5,9 +6,16 @@ public class HexapodController : MonoBehaviour
 {
 
     public HexapodLeg[] legs;
-    [SerializeField] public float velForward = 90f;
-
-
+    [SerializeField] private const float VelForward = 200f;
+    [SerializeField] public const float AngleTouchDown = 45;
+    [SerializeField] public const float AngleLiftOff = -45;
+    [SerializeField] public const float LimitRes = 1f;
+    private const float Kp = 10f;
+    private const float Ki = 1f;
+    private const float Kd = 1f;
+    public const float DefaultMotorForce = 1000f;
+    public static readonly PID Pid = new PID(Kp, Ki, Kd);
+    
     private void Awake()
     {
         LegSetup();      
@@ -15,7 +23,7 @@ public class HexapodController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Input.GetKey(KeyCode.W))
         {
             MoveForward();
         }
@@ -37,10 +45,19 @@ public class HexapodController : MonoBehaviour
 
     private void MoveForward()
     { 
-        // Debug.Log("Trying to move Forward");
         foreach (var leg in legs)
         {
-            leg.ContinuousRotation(velForward);
+            switch (leg.group)
+            {
+                case HexapodLeg.InversionGroup.A:
+                    leg.MoveToForward(VelForward, AngleTouchDown);
+                    break;
+                case HexapodLeg.InversionGroup.B:
+                    leg.MoveToForward(VelForward, AngleLiftOff);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 
