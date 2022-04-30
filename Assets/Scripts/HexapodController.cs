@@ -1,63 +1,60 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class HexapodController : MonoBehaviour
 {
 
-    public HexapodLeg[] Legs;
+    public HexapodLeg[] legs;
+    [SerializeField] public float velForward = 90f;
+
 
     private void Awake()
     {
-        Legs = LegSetup();      
+        LegSetup();      
     }
 
     private void Update()
     {
-        MoveForward();
-        StopMovement();
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            MoveForward();
+        }
+        else if (Input.GetKeyUp(KeyCode.W))
+        {
+            StopMovement();
+        }
     }
 
     private void StopMovement()
     {
-        if (Input.GetKeyDown(KeyCode.S))
+        // Debug.Log("Trying to stop rotation");
+        foreach(var leg in legs)
         {
-            Debug.Log("Trying to stop rotation");
-            foreach(HexapodLeg leg in Legs)
-            {
-                leg.StopRotation();
-            }
+            leg.StopRotation();
         }
+        
     }
 
     private void MoveForward()
-    {
-        if (Input.GetKeyDown(KeyCode.W))
+    { 
+        // Debug.Log("Trying to move Forward");
+        foreach (var leg in legs)
         {
-            Debug.Log("Trying to move Forward");
-            foreach (HexapodLeg leg in Legs)
-            {
-                leg.ContinualRotation(90);
-            }
+            leg.ContinuousRotation(velForward);
         }
     }
 
-    private HexapodLeg[] LegSetup()
+    private void LegSetup()
     {
-        List<HexapodLeg> LegHolder = new List<HexapodLeg>();
-        foreach (Transform child in transform)
-        {
-            if (child.tag == "LegAnchor")
-            {
-                LegHolder.Add(child.GetChild(0).GetComponent<HexapodLeg>());               
-            }
-        }
-        return LegHolder.ToArray();
+        legs = (
+            from Transform child in transform 
+            where child.CompareTag("LegAnchor") 
+            select child.GetChild(0).GetComponent<HexapodLeg>()
+            ).ToArray();
     }
 
     public HexapodLeg[] GetLegList()
     {
-        return Legs;
+        return legs;
     }
 }
