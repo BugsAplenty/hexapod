@@ -3,25 +3,19 @@ using UnityEngine;
 using System.Collections;
 
 [Serializable]
-public class PID
+public class Pid
 {
-    private float _p, _i, _d;
-    private float _kp, _ki, _kd;
-    private float _prevError;
+    private float p, i, d;
+    private float kp, ki, kd;
+    private float prevError;
 
     /// <summary>
     /// Constant proportion
     /// </summary>
     public float Kp
     {
-        get
-        {
-            return _kp;
-        }
-        set
-        {
-            _kp = value;
-        }
+        get => kp;
+        set => kp = value;
     }
 
     /// <summary>
@@ -29,14 +23,8 @@ public class PID
     /// </summary>
     public float Ki
     {
-        get
-        {
-            return _ki;
-        }
-        set
-        {
-            _ki = value;
-        }
+        get => ki;
+        set => ki = value;
     }
 
     /// <summary>
@@ -44,21 +32,15 @@ public class PID
     /// </summary>
     public float Kd
     {
-        get
-        {
-            return _kd;
-        }
-        set
-        {
-            _kd = value;
-        }
+        get => kd;
+        set => kd = value;
     }
 
-    public PID(float p, float i, float d)
+    public Pid(float p, float i, float d)
     {
-        _kp = p;
-        _ki = i;
-        _kd = d;
+        kp = p;
+        ki = i;
+        kd = d;
     }
 
     /// <summary>
@@ -70,11 +52,11 @@ public class PID
     /// <returns></returns>
     public float GetOutput(float currentError, float deltaTime)
     {
-        _p = currentError;
-        _i += _p * deltaTime;
-        _d = (_p - _prevError) / deltaTime;
-        _prevError = currentError;
+        p = currentError;
+        i += p * deltaTime;
+        d = (p - prevError) / deltaTime;
+        prevError = currentError;
         
-        return _p * Kp + _i * Ki + _d * Kd;
+        return p * Kp + i * Ki + d * Kd;
     }
 }

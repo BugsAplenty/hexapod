@@ -6,15 +6,15 @@ public class HexapodController : MonoBehaviour
 {
 
     public HexapodLeg[] legs;
-    [SerializeField] private const float VelForward = 200f;
-    [SerializeField] public const float AngleTouchDown = 45;
-    [SerializeField] public const float AngleLiftOff = -45;
-    [SerializeField] public const float LimitRes = 1f;
+    private const float VelForward = 200f;
+    public const float AngleTouchDown = 45;
+    public const float AngleLiftOff = -45;
+    public const float LimitRes = 1f;
     private const float Kp = 10f;
     private const float Ki = 1f;
     private const float Kd = 1f;
     public const float DefaultMotorForce = 1000f;
-    public static readonly PID Pid = new PID(Kp, Ki, Kd);
+    public static readonly Pid Pid = new Pid(Kp, Ki, Kd);
     
     private void Awake()
     {
@@ -26,11 +26,9 @@ public class HexapodController : MonoBehaviour
         if (Input.GetKey(KeyCode.W))
         {
             MoveForward();
+            return;
         }
-        else if (Input.GetKeyUp(KeyCode.W))
-        {
-            StopMovement();
-        }
+        StopMovement();
     }
 
     private void StopMovement()
@@ -47,17 +45,18 @@ public class HexapodController : MonoBehaviour
     { 
         foreach (var leg in legs)
         {
-            switch (leg.group)
-            {
-                case HexapodLeg.InversionGroup.A:
-                    leg.MoveToForward(VelForward, AngleTouchDown);
-                    break;
-                case HexapodLeg.InversionGroup.B:
-                    leg.MoveToForward(VelForward, AngleLiftOff);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            // switch (leg.group)
+            // {
+            //     // case HexapodLeg.InversionGroup.A:
+            //     //     leg.MoveToForward(VelForward, AngleTouchDown);
+            //     //     break;
+            //     // case HexapodLeg.InversionGroup.B:
+            //     //     leg.MoveToForward(VelForward, AngleLiftOff);
+            //     //     break;
+            //     // default:
+            //     //     throw new ArgumentOutOfRangeException();
+            // }
+            leg.ContinuousRotation(90);
         }
     }
 
