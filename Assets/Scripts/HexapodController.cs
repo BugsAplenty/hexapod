@@ -1,63 +1,76 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class HexapodController : MonoBehaviour
 {
 
-    public HexapodLeg[] Legs;
-
+    public HexapodLeg[] legs;
+    private const float VelForward = 200f;
+    public const float AngleTouchDown = 45;
+    public const float AngleLiftOff = -45;
+    public const float LimitRes = 1f;
+    private const float Kp = 10f;
+    private const float Ki = 1f;
+    private const float Kd = 1f;
+    public const float DefaultMotorForce = 1000f;
+    public static readonly Pid Pid = new Pid(Kp, Ki, Kd);
+    
     private void Awake()
     {
-        Legs = LegSetup();      
+        LegSetup();      
     }
 
     private void Update()
     {
-        MoveForward();
+        if (Input.GetKey(KeyCode.W))
+        {
+            MoveForward();
+            return;
+        }
         StopMovement();
     }
 
     private void StopMovement()
     {
-        if (Input.GetKeyDown(KeyCode.S))
+        // Debug.Log("Trying to stop rotation");
+        foreach(var leg in legs)
         {
-            Debug.Log("Trying to stop rotation");
-            foreach(HexapodLeg leg in Legs)
-            {
-                leg.StopRotation();
-            }
+            leg.StopRotation();
         }
+        
     }
 
     private void MoveForward()
-    {
-        if (Input.GetKeyDown(KeyCode.W))
+    { 
+        foreach (var leg in legs)
         {
-            Debug.Log("Trying to move Forward");
-            foreach (HexapodLeg leg in Legs)
-            {
-                leg.ContinualRotation(90);
-            }
+            // switch (leg.group)
+            // {
+            //     // case HexapodLeg.InversionGroup.A:
+            //     //     leg.MoveToForward(VelForward, AngleTouchDown);
+            //     //     break;
+            //     // case HexapodLeg.InversionGroup.B:
+            //     //     leg.MoveToForward(VelForward, AngleLiftOff);
+            //     //     break;
+            //     // default:
+            //     //     throw new ArgumentOutOfRangeException();
+            // }
+            leg.ContinuousRotation(90);
         }
     }
 
-    private HexapodLeg[] LegSetup()
+    private void LegSetup()
     {
-        List<HexapodLeg> LegHolder = new List<HexapodLeg>();
-        foreach (Transform child in transform)
-        {
-            if (child.tag == "LegAnchor")
-            {
-                LegHolder.Add(child.GetChild(0).GetComponent<HexapodLeg>());               
-            }
-        }
-        return LegHolder.ToArray();
+        legs = (
+            from Transform child in transform 
+            where child.CompareTag("LegAnchor") 
+            select child.GetChild(0).GetComponent<HexapodLeg>()
+            ).ToArray();
     }
 
     public HexapodLeg[] GetLegList()
     {
-        return Legs;
+        return legs;
     }
 }

@@ -1,23 +1,19 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.Rendering;
+using Debug = System.Diagnostics.Debug;
 
 public class HexapodLeg : MonoBehaviour
 {
-    enum InversionGroup
+    public enum InversionGroup
     {
         A,B
     }
-
-    [SerializeField] float angleTouchDown;
-    [SerializeField] float angleLiftOff;
-    [SerializeField] float motorForce = 1000f;
-    [SerializeField] InversionGroup Group;
-
+    
+    [SerializeField] public InversionGroup group;
     private HingeJoint joint;
     private JointMotor legMotor;
-
 
     private void Start()
     {
@@ -26,29 +22,46 @@ public class HexapodLeg : MonoBehaviour
 
     private void JointSetup()
     {
+        legMotor.force = HexapodController.DefaultMotorForce;
         joint = GetComponent<HingeJoint>();
-        legMotor.force = motorForce;
         joint.motor = legMotor;
         joint.useMotor = true;
-        if (Group == InversionGroup.B)
+        transform.localRotation = group switch
         {
-            transform.parent.Rotate(180, 0, 0);
-        }
+            InversionGroup.B => Quaternion.Euler(HexapodController.AngleTouchDown, 0, 0),
+            InversionGroup.A => Quaternion.Euler(HexapodController.AngleLiftOff, 0, 0),
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
-    public void ContinualRotation(float velocity)
+    public void ContinuousRotation(float velocity)
     {
-        legMotor.force = motorForce;
         legMotor.targetVelocity = velocity;
+        legMotor.force = HexapodController.Pid.GetOutput(
+            Math.Abs(TargetVelocity() - Velocity()), 
+            Time.deltaTime
+            );
         legMotor.freeSpin = false;
         joint.motor = legMotor;
         joint.useLimits = false;
     }
 
-    public void StopRotation()
-    {   
+    public void MoveToForward(float velocity, float targetAngle)
+    {
+        if (Math.Abs(Angle() - targetAngle) < 2)
+        {
+            StopRotation();
+        }
+        else
+        {
+            ContinuousRotation(velocity);
+        }
+    }
 
+    public void StopRotation()
+    {
         legMotor.targetVelocity = 0;
+        legMotor.force = HexapodController.DefaultMotorForce;
         joint.motor = legMotor;
         joint.limits = SetLimit();
         joint.useLimits = true;
@@ -56,9 +69,12 @@ public class HexapodLeg : MonoBehaviour
 
     private JointLimits SetLimit()
     {
-        JointLimits limits = new JointLimits();
-        limits.max = joint.angle + 10f;
-        limits.min = joint.angle - 2f;
+        var targetAngle = Angle();
+        var limits = new JointLimits
+        {
+            max = targetAngle + HexapodController.LimitRes,
+            min = targetAngle - HexapodController.LimitRes
+        };
         return limits;
     }
 
@@ -72,30 +88,13 @@ public class HexapodLeg : MonoBehaviour
         return joint.velocity;
     }
 
-    //private void SetGoalAngle(float angle)
-    //{
-    //    JointLimits limits = joint.limits;
-    //    if (angle < joint.angle)
-    //    {
-    //        limits.min = angle;
-    //    }
-    //    else
-    //    {
-    //        limits.max = angle;
-    //    }
-    //    joint.limits = limits;
-    //}
+    public float Torque()
+    {
+        return legMotor.force;
+    }
 
-    //public void Rotate(float velocity)
-    //{
-    //    legMotor.targetVelocity = velocity;
-    //    joint.motor = legMotor;
-    //}
-
-    //public void MoveTo(float velocity, float angle)
-    //{
-    //    SetGoalAngle(angle);
-    //    Rotate(velocity);
-    //}
-
+    private float Angle()
+    {
+        return joint.angle;
+    }
 }
