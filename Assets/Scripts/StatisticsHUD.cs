@@ -44,7 +44,7 @@ public class StatisticsHUD : MonoBehaviour
         {
             if (!child.CompareTag("LegList")) continue;
             textMesh.Add(child.GetComponent<TextMeshProUGUI>());
-            Debug.Log("Added " + child.name);
+            //Debug.Log("Added " + child.name);
         }
         return textMesh.ToArray();
     }

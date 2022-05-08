@@ -9,26 +9,33 @@ public class HexapodController : MonoBehaviour
     private const float VelForward = 200f;
     public const float AngleTouchDown = 45;
     public const float AngleLiftOff = -45;
-    public const float LimitRes = 1f;
+    public const float LimitRes = 5f;
     private const float Kp = 10f;
     private const float Ki = 1f;
     private const float Kd = 1f;
-    public const float DefaultMotorForce = 1000f;
+    public const float DefaultMotorForce = 10f;
     public static readonly Pid Pid = new Pid(Kp, Ki, Kd);
+
+    private bool StoppedMovement = true;
     
     private void Awake()
     {
         LegSetup();      
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (Input.GetKey(KeyCode.W))
         {
             MoveForward();
+            StoppedMovement = false;
             return;
         }
-        StopMovement();
+        if (!StoppedMovement)
+        {
+            StoppedMovement = true;
+            StopMovement();
+        }
     }
 
     private void StopMovement()
@@ -56,7 +63,7 @@ public class HexapodController : MonoBehaviour
             //     // default:
             //     //     throw new ArgumentOutOfRangeException();
             // }
-            leg.ContinuousRotation(90);
+            leg.ContinuousRotation(200);
         }
     }
 

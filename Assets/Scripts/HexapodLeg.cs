@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Debug = System.Diagnostics.Debug;
+
 
 public class HexapodLeg : MonoBehaviour
 {
@@ -26,8 +26,10 @@ public class HexapodLeg : MonoBehaviour
         joint = GetComponent<HingeJoint>();
         joint.motor = legMotor;
         joint.useMotor = true;
+
+        //GetComponentInParent<Transform>().localRotation = group switch
         transform.localRotation = group switch
-        {
+         {
             InversionGroup.B => Quaternion.Euler(HexapodController.AngleTouchDown, 0, 0),
             InversionGroup.A => Quaternion.Euler(HexapodController.AngleLiftOff, 0, 0),
             _ => throw new ArgumentOutOfRangeException()
@@ -36,6 +38,7 @@ public class HexapodLeg : MonoBehaviour
 
     public void ContinuousRotation(float velocity)
     {
+        joint.useLimits = false;
         legMotor.targetVelocity = velocity;
         legMotor.force = HexapodController.Pid.GetOutput(
             Math.Abs(TargetVelocity() - Velocity()), 
@@ -43,7 +46,7 @@ public class HexapodLeg : MonoBehaviour
             );
         legMotor.freeSpin = false;
         joint.motor = legMotor;
-        joint.useLimits = false;
+        
     }
 
     public void MoveToForward(float velocity, float targetAngle)
@@ -65,6 +68,8 @@ public class HexapodLeg : MonoBehaviour
         joint.motor = legMotor;
         joint.limits = SetLimit();
         joint.useLimits = true;
+        UnityEngine.Debug.Log("Current Angle Limits for " + name + " are: " + joint.limits.min + " | " + joint.limits.max);
+        UnityEngine.Debug.Log("Current Angle is for " + name + " is: " + Angle());
     }
 
     private JointLimits SetLimit()
@@ -73,8 +78,12 @@ public class HexapodLeg : MonoBehaviour
         var limits = new JointLimits
         {
             max = targetAngle + HexapodController.LimitRes,
-            min = targetAngle - HexapodController.LimitRes
+            min = targetAngle - HexapodController.LimitRes,
+            bounciness = 0.2f,
+            bounceMinVelocity = 0.2f
         };
+        if(limits.max >= 180) limits.max += -360;
+        if (limits.min <= -180) limits.min += 360;
         return limits;
     }
 
