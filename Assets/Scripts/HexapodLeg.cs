@@ -96,8 +96,8 @@ public class HexapodLeg : MonoBehaviour
             bounciness = 0.2f,
             bounceMinVelocity = 0.2f
         };
-        if(limits.max >= 180) limits.max += -360;
-        if (limits.min <= -180) limits.min += 360; 
+        limits.max = Geometry.AngleModDeg(limits.max);
+        limits.min = Geometry.AngleModDeg(limits.min); 
         joint.limits = limits;
     }
 
