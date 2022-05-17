@@ -5,35 +5,35 @@ using UnityEngine;
 
 public class StatisticsHUD : MonoBehaviour
 {
-    private HexapodController _hex;
-    private HexapodLeg[] _legs;
-    private TextMeshProUGUI[] _updatables;
-    private TextMeshProUGUI _targetVel;
+    private HexapodController hex;
+    private HexapodLeg[] legs;
+    private TextMeshProUGUI[] updatables;
+    private TextMeshProUGUI targetVel;
 
     private void Awake()
     {
-        _hex = GameObject.FindWithTag("Hexapod").GetComponent<HexapodController>();
-        _targetVel = transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+        hex = GameObject.FindWithTag("Hexapod").GetComponent<HexapodController>();
+        targetVel = transform.GetChild(1).GetComponent<TextMeshProUGUI>();
     }
 
     private void Start()
     {
-        _legs = _hex.GetLegList();
-        _updatables = UpdatablesSetUp();
+        legs = hex.GetLegList();
+        updatables = UpdatablesSetUp();
     }
 
     private void Update()
     {
-        _targetVel.SetText(_legs[0].TargetVelocity().ToString("f2"));
+        targetVel.SetText(legs[0].TargetVelocity().ToString("f2"));
         VelocityInserter();
     }
 
 
     private void VelocityInserter()
     {
-        for(var i = 0; i <= _legs.Length-1; i++)
+        for(var i = 0; i <= legs.Length-1; i++)
         {
-            _updatables[i].SetText(_updatables[i].name +": " + _legs[i].Velocity().ToString("f2"));
+            updatables[i].SetText(updatables[i].name +": " + legs[i].Velocity().ToString("f2"));
         }
     }
 

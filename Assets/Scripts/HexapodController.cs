@@ -47,19 +47,19 @@ public class HexapodController : MonoBehaviour
     { 
         foreach (var leg in legs)
         {
-            leg.MoveToForward(VelForward, AngleTouchDown);
+            // leg.MoveToForward(VelForward, AngleTouchDown);
             //
-            // switch (leg.group)
-            // {
-            //     case HexapodLeg.InversionGroup.A:
-            //         leg.MoveToForward(VelForward, AngleTouchDown);
-            //         break;
-            //     case HexapodLeg.InversionGroup.B:
-            //         leg.MoveToForward(VelForward, AngleLiftOff);
-            //         break;
-            //     default:
-            //         throw new ArgumentOutOfRangeException();
-            // }
+            switch (leg.group)
+            {
+                case HexapodLeg.InversionGroup.A:
+                    leg.MoveToForward(VelForward, AngleTouchDown);
+                    break;
+                case HexapodLeg.InversionGroup.B:
+                    leg.MoveToForward(VelForward, AngleLiftOff);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             // leg.ContinuousRotation(200);
         }
     }
