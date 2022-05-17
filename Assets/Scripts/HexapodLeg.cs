@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 
 public class HexapodLeg : MonoBehaviour
 {
-    public enum InversionGroup
+    public enum Tripod
     {
         A,B
     }
@@ -18,7 +18,7 @@ public class HexapodLeg : MonoBehaviour
 
     private State state;
     
-    [SerializeField] public InversionGroup group;
+    [SerializeField] public Tripod tripod;
     private HingeJoint joint;
     private JointMotor legMotor;
 
@@ -35,13 +35,13 @@ public class HexapodLeg : MonoBehaviour
         joint.motor = legMotor;
         joint.useMotor = true;
 
-        //GetComponentInParent<Transform>().localRotation = group switch
-        transform.localRotation = group switch
-         {
-            InversionGroup.B => Quaternion.Euler(HexapodController.AngleTouchDown, 0, 0),
-            InversionGroup.A => Quaternion.Euler(HexapodController.AngleLiftOff, 0, 0),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        //GetComponentInParent<Transform>().localRotation = tripod switch
+        // transform.localRotation = tripod switch
+        //  {
+        //     Tripod.B => Quaternion.Euler(HexapodController.AngleTouchDown, 0, 0),
+        //     Tripod.A => Quaternion.Euler(HexapodController.AngleLiftOff, 0, 0),
+        //     _ => throw new ArgumentOutOfRangeException()
+        // };
     }
 
     public void ContinuousRotation(float velocity)
@@ -71,6 +71,23 @@ public class HexapodLeg : MonoBehaviour
             StopRotation();
         }
     }
+    public void MoveToOptimal(float velocity, float targetAngle)
+    {
+        var angleDiff = Angle() - targetAngle;
+        angleDiff = Geometry.AngleModDeg(angleDiff);
+        if (angleDiff < HexapodController.LimitRes * 3 & angleDiff > -HexapodController.LimitRes * 3)
+        {
+            StopRotation();
+        }
+        else if (angleDiff > 180)
+        {
+            ContinuousRotation(-velocity);
+        }
+        else
+        {
+            ContinuousRotation(velocity);
+        }
+    }
 
     public void StopRotation()
     {
@@ -93,8 +110,8 @@ public class HexapodLeg : MonoBehaviour
         {
             max = targetAngle + HexapodController.LimitRes,
             min = targetAngle - HexapodController.LimitRes,
-            bounciness = 0.2f,
-            bounceMinVelocity = 0.2f
+            // bounciness = 0.2f,
+            // bounceMinVelocity = 0.2f
         };
         limits.max = Geometry.AngleModDeg(limits.max);
         limits.min = Geometry.AngleModDeg(limits.min); 

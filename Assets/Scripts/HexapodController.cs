@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 
@@ -21,7 +22,37 @@ public class HexapodController : MonoBehaviour
     {
         LegSetup();      
     }
-    
+
+    public enum State
+    {
+        Walk,
+        Stand
+    }
+
+    public void Stand()
+    {
+        foreach (var leg in legs)
+        {
+            StartCoroutine(LegToStand(leg));
+        }   
+    }
+
+    private static IEnumerator LegToStand(HexapodLeg leg)
+    {
+        switch (leg.tripod)
+        {
+            case HexapodLeg.Tripod.A:
+                leg.MoveToOptimal(VelForward, AngleTouchDown);
+                break;
+            case HexapodLeg.Tripod.B:
+                leg.MoveToOptimal(VelForward, AngleLiftOff);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        yield return null;
+    }
 
     private void FixedUpdate()
     {
@@ -30,7 +61,7 @@ public class HexapodController : MonoBehaviour
             MoveForward();
             return;
         }
-        StopMovement();
+        Stand();
     }
 
     private void StopMovement()
@@ -47,20 +78,18 @@ public class HexapodController : MonoBehaviour
     { 
         foreach (var leg in legs)
         {
-            // leg.MoveToForward(VelForward, AngleTouchDown);
-            //
-            switch (leg.group)
-            {
-                case HexapodLeg.InversionGroup.A:
-                    leg.MoveToForward(VelForward, AngleTouchDown);
-                    break;
-                case HexapodLeg.InversionGroup.B:
-                    leg.MoveToForward(VelForward, AngleLiftOff);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            // leg.ContinuousRotation(200);
+            // switch (leg.tripod)
+            // {
+            //     case HexapodLeg.Tripod.A:
+            //         leg.MoveToForward(VelForward, AngleTouchDown);
+            //         break;
+            //     case HexapodLeg.Tripod.B:
+            //         leg.MoveToForward(VelForward, AngleLiftOff);
+            //         break;
+            //     default:
+            //         throw new ArgumentOutOfRangeException();
+            // }
+            leg.ContinuousRotation(200);
         }
     }
 
