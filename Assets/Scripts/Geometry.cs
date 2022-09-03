@@ -2,8 +2,16 @@
 {
     public static float AngleModDeg(float angle)
     {
-        if (angle >= 180) angle += -360;
-        else if (angle <= -180) angle += 360;
+        switch (angle)
+        {
+            case >= 180:
+                angle += -360;
+                break;
+            case <= -180:
+                angle += 360;
+                break;
+        }
+
         return angle;
     }
 }
