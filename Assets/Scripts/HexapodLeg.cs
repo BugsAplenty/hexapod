@@ -58,11 +58,15 @@ public class HexapodLeg : MonoBehaviour
         
     }
 
+    public bool IsAtAngle(float targetAngle)
+    {
+        var angleDiff = Geometry.AngleModDiff(Angle(), targetAngle);
+        return angleDiff < HexapodController.LimitRes * 3 & angleDiff > -HexapodController.LimitRes * 3;
+    }
+
     public void MoveToForward(float velocity, float targetAngle)
     {
-        var angleDiff = Angle() - targetAngle;
-        angleDiff = Geometry.AngleModDeg(angleDiff);
-        if (angleDiff > HexapodController.LimitRes * 3 | angleDiff < -HexapodController.LimitRes * 3)
+        if (IsAtAngle(targetAngle))
         {
             ContinuousRotation(velocity);
         }
@@ -73,9 +77,8 @@ public class HexapodLeg : MonoBehaviour
     }
     public void MoveToOptimal(float velocity, float targetAngle)
     {
-        var angleDiff = Angle() - targetAngle;
-        angleDiff = Geometry.AngleModDeg(angleDiff);
-        if (angleDiff < HexapodController.LimitRes * 3 & angleDiff > -HexapodController.LimitRes * 3)
+        var angleDiff = Geometry.AngleModDiff(Angle(), targetAngle);
+        if (IsAtAngle(targetAngle))
         {
             StopRotation();
         }
@@ -118,6 +121,15 @@ public class HexapodLeg : MonoBehaviour
         joint.limits = limits;
     }
 
+    public bool IsAtLiftOff()
+    {
+        return IsAtAngle(HexapodController.AngleLiftOff);
+    }
+
+    public bool IsAtTouchDown()
+    {
+        return IsAtAngle(HexapodController.AngleTouchDown);
+    }
     public float TargetVelocity()
     {
         return legMotor.targetVelocity;

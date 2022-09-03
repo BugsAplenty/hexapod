@@ -14,4 +14,9 @@
 
         return angle;
     }
+
+    public static float AngleModDiff(float angle, float otherAngle)
+    {
+        return AngleModDeg(angle - otherAngle);
+    }
 }

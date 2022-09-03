@@ -33,27 +33,20 @@ public class HexapodController : MonoBehaviour
     {
         foreach (var leg in legs)
         {
-            StartCoroutine(LegToStand(leg));
+            switch (leg.tripod)
+            {
+                case HexapodLeg.Tripod.A:
+                    leg.MoveToOptimal(VelForward, AngleTouchDown);
+                    break;
+                case HexapodLeg.Tripod.B:
+                    leg.MoveToOptimal(VelForward, AngleLiftOff);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }   
     }
-
-    private static IEnumerator LegToStand(HexapodLeg leg)
-    {
-        switch (leg.tripod)
-        {
-            case HexapodLeg.Tripod.A:
-                leg.MoveToOptimal(VelForward, AngleTouchDown);
-                break;
-            case HexapodLeg.Tripod.B:
-                leg.MoveToOptimal(VelForward, AngleLiftOff);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        yield return null;
-    }
-
+    
     private void FixedUpdate()
     {
         if (Input.GetKey(KeyCode.W))
@@ -66,7 +59,6 @@ public class HexapodController : MonoBehaviour
 
     private void StopMovement()
     {
-        // Debug.Log("Trying to stop rotation");
         foreach(var leg in legs)
         {
             leg.StopRotation();
