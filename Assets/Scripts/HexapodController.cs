@@ -17,6 +17,7 @@ public class HexapodController : MonoBehaviour
     private const float Kd = 1f;
     public const float DefaultMotorForce = 10f;
     public static readonly Pid Pid = new Pid(Kp, Ki, Kd);
+    public State state;
     
     private void Awake()
     {
@@ -44,14 +45,20 @@ public class HexapodController : MonoBehaviour
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }   
+        }
+        state = State.Stand;
     }
     
     private void FixedUpdate()
     {
         if (Input.GetKey(KeyCode.W))
         {
-            MoveForward();
+            if (state == State.Stand)
+            {
+                MoveForward();
+            }
+
+            state = State.Walk;
             return;
         }
         Stand();
