@@ -317,6 +317,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: HexapodBody
       objectReference: {fileID: 0}
+    - target: {fileID: 1602188490223285459, guid: 78a21622409a7a847ab65fde5df2db20,
+        type: 3}
+      propertyPath: tripod
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2625457196024133055, guid: 78a21622409a7a847ab65fde5df2db20,
+        type: 3}
+      propertyPath: tripod
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8339657498172882449, guid: 78a21622409a7a847ab65fde5df2db20,
         type: 3}
       propertyPath: m_RootOrder
@@ -371,6 +381,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.029
+      objectReference: {fileID: 0}
+    - target: {fileID: 8532177331529616288, guid: 78a21622409a7a847ab65fde5df2db20,
+        type: 3}
+      propertyPath: tripod
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

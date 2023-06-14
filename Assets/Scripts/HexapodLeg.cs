@@ -21,13 +21,39 @@ public class HexapodLeg : MonoBehaviour
     [SerializeField] public Tripod tripod;
     private HingeJoint joint;
     private JointMotor legMotor;
-
+    private bool isStopping = false;
+    private enum StopState
+    {
+        Stopping, Idle
+    }
+    private StopState stopState;
     private void Start()
     {
         JointSetup();
         state = State.Stop;
     }
-
+    private void Update()
+    {
+        if (stopState == StopState.Stopping)
+        {
+            if (Mathf.Abs(joint.velocity) < 0.1f)
+            {
+                legMotor.targetVelocity = 0;
+                legMotor.force = HexapodController.DefaultMotorForce;
+                joint.motor = legMotor;
+                SetLimit();
+                joint.useLimits = true;
+                state = State.Stop;
+                stopState = StopState.Idle;
+            }
+            else
+            {
+                legMotor.targetVelocity = Mathf.Lerp(legMotor.targetVelocity, 0, Time.deltaTime * 5);
+                legMotor.force = HexapodController.DefaultMotorForce;
+                joint.motor = legMotor;
+            }
+        }
+    }
     private void JointSetup()
     {
         legMotor.force = HexapodController.DefaultMotorForce;
@@ -84,27 +110,34 @@ public class HexapodLeg : MonoBehaviour
         }
         else if (angleDiff > 180)
         {
-            ContinuousRotation(-velocity);
+            if (Angle() < targetAngle) 
+            {
+                StopRotation();
+            }
+            else 
+            {
+                ContinuousRotation(-velocity);
+            }
         }
         else
         {
-            ContinuousRotation(velocity);
+            if (Angle() > targetAngle)
+            {
+                StopRotation();
+            }
+            else 
+            {
+                ContinuousRotation(velocity);
+            }
         }
     }
 
     public void StopRotation()
     {
         if (state != State.Go) return;
-        state = State.Stop;
-        legMotor.targetVelocity = 0;
-        legMotor.force = HexapodController.DefaultMotorForce;
-        joint.motor = legMotor;
-        SetLimit();
-        joint.useLimits = true;
-
-        // UnityEngine.Debug.Log("Current Angle Limits for " + name + " are: " + joint.limits.min + " | " + joint.limits.max);
-        // UnityEngine.Debug.Log("Current Angle is for " + name + " is: " + Angle());
+        stopState = StopState.Stopping;
     }
+
 
     private void SetLimit()
     {

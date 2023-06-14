@@ -29,9 +29,12 @@ public class HexapodController : MonoBehaviour
         Walk,
         Stand
     }
+    private Coroutine walkingCoroutine;
 
     public void Stand()
     {
+        if (state == State.Stand)
+            return;
         foreach (var leg in legs)
         {
             switch (leg.tripod)
@@ -48,49 +51,106 @@ public class HexapodController : MonoBehaviour
         }
         state = State.Stand;
     }
-    
-    private void FixedUpdate()
+    private IEnumerator StopWalking()
     {
-        if (Input.GetKey(KeyCode.W))
+        foreach (var leg in legs)
         {
-            if (state == State.Stand)
-            {
-                MoveForward();
-            }
-
-            state = State.Walk;
-            return;
+            leg.MoveToOptimal(VelForward, AngleTouchDown);
         }
-        Stand();
+
+        yield break;
     }
+    
+    private IEnumerator StartWalking()
+    {
+        foreach (var leg in legs)
+        {
+            switch (leg.tripod)
+            {
+                case HexapodLeg.Tripod.A:
+                    leg.MoveToOptimal(VelForward, AngleLiftOff);
+                    break;
+                case HexapodLeg.Tripod.B:
+                    leg.MoveToOptimal(VelForward, AngleTouchDown);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        yield break;
+    }
+
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            //If a coroutine is currently running, stop it
+            if(walkingCoroutine != null)
+            {
+                StopCoroutine(walkingCoroutine);
+                walkingCoroutine = null;
+            }
+            walkingCoroutine = StartCoroutine(StartWalking());
+        }
+        else if (Input.GetKeyUp(KeyCode.W))
+        {
+            if(walkingCoroutine != null)
+            {
+                StopCoroutine(walkingCoroutine);
+                walkingCoroutine = null;
+            }
+            walkingCoroutine = StartCoroutine(StopWalking());
+        }
+    }
+
+
 
     private void StopMovement()
     {
-        foreach(var leg in legs)
+        foreach (var leg in legs)
         {
             leg.StopRotation();
         }
-        
     }
 
     private void MoveForward()
     { 
         foreach (var leg in legs)
         {
-            // switch (leg.tripod)
-            // {
-            //     case HexapodLeg.Tripod.A:
-            //         leg.MoveToForward(VelForward, AngleTouchDown);
-            //         break;
-            //     case HexapodLeg.Tripod.B:
-            //         leg.MoveToForward(VelForward, AngleLiftOff);
-            //         break;
-            //     default:
-            //         throw new ArgumentOutOfRangeException();
-            // }
-            leg.ContinuousRotation(200);
+            switch (leg.tripod)
+            {
+                case HexapodLeg.Tripod.A:
+                    // If the leg is at the liftoff angle, move to touchdown
+                    if (leg.IsAtLiftOff())
+                    {
+                        leg.MoveToOptimal(VelForward, AngleTouchDown);
+                    }
+                    // If the leg is at the touchdown angle, move to liftoff
+                    else if (leg.IsAtTouchDown())
+                    {
+                        leg.MoveToOptimal(VelForward, AngleLiftOff);
+                    }
+                    break;
+                case HexapodLeg.Tripod.B:
+                    // If the leg is at the liftoff angle, move to touchdown
+                    if (leg.IsAtLiftOff())
+                    {
+                        leg.MoveToOptimal(VelForward, AngleTouchDown);
+                    }
+                    // If the leg is at the touchdown angle, move to liftoff
+                    else if (leg.IsAtTouchDown())
+                    {
+                        leg.MoveToOptimal(VelForward, AngleLiftOff);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
+
 
     private void LegSetup()
     {
