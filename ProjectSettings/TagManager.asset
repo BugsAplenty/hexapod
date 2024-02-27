@@ -9,6 +9,12 @@ TagManager:
   - RhexLeg
   - LegAnchor
   - Hexapod
+  - HexapodLegLeftBack
+  - HexapodLegRightCenter
+  - HexapodLegLeftCenter
+  - HexapodLegRightBack
+  - HexapodLegLeftFront
+  - HexapodLegRightFront
   layers:
   - Default
   - TransparentFX

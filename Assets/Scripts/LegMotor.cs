@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -5,68 +6,181 @@ public class LegMotor : MonoBehaviour
 {
     public HingeJoint hingeJoint;
     public float targetAngle; // The target angle for the leg to rotate to
-    private PID pid;
-    private Rigidbody rb;
-    private float desiredVelocity = 100f; // Desired constant velocity in degrees per second
-    private float maxForce = 100f; // Maximum force the PID controller can apply
-    public float CurrentAngle => hingeJoint.transform.localEulerAngles.z;
-    // PID coefficients
-    private float kp = 10f; // Proportional gain
-    private float ki = 0.1f; // Integral gain
-    private float kd = 5f; // Derivative gain
+    private HingeJoint joint;
+    private JointMotor legMotor;
+    private bool isStopping = false;
+    private State state;
 
+    private enum StopState
+    {
+        Stopping, Idle
+    }
+    private enum State
+    {
+        Stop, Go
+    }
+    private StopState stopState;
     private void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        pid = new PID(kp, ki, kd);
+        JointSetup();
+        state = State.Stop;
     }
-// Updated RotateToAngle method to include a clockwise parameter
-    public void RotateToAngle(float angle, bool clockwise, float speed)
+    private void Update()
     {
-        targetAngle = angle;
-        // The 'clockwise' parameter is not used in the current implementation
-        // as the direction is determined by the PID controller based on the angle error.
-    }
-    // Method to stop the leg movement and hold its current position
-    public void StopAndHoldPosition()
-    {
-        targetAngle = CurrentAngle; // Set the target angle to the current angle to minimize error
-        // This will cause the PID controller to apply minimal force to maintain the current position
-    }
-    void FixedUpdate()
-    {
-        float currentAngle = hingeJoint.transform.localEulerAngles.z;
-        float angleError = Mathf.DeltaAngle(currentAngle, targetAngle);
-
-        // If we're close to the target angle, switch to holding position
-        if (Mathf.Abs(angleError) < 1f)
+        if (stopState == StopState.Stopping)
         {
-            HoldPositionWithDynamicForce(angleError);
+            if (Mathf.Abs(joint.velocity) < 0.1f)
+            {
+                legMotor.targetVelocity = 0;
+                legMotor.force = HexapodController.DefaultMotorForce;
+                joint.motor = legMotor;
+                SetLimit();
+                joint.useLimits = true;
+                state = State.Stop;
+                stopState = StopState.Idle;
+            }
+            else
+            {
+                legMotor.targetVelocity = Mathf.Lerp(legMotor.targetVelocity, 0, Time.deltaTime * 5);
+                legMotor.force = HexapodController.DefaultMotorForce;
+                joint.motor = legMotor;
+            }
+        }
+    }
+    private void JointSetup()
+    {
+        legMotor.force = HexapodController.DefaultMotorForce;
+        joint = GetComponent<HingeJoint>();
+        joint.motor = legMotor;
+        joint.useMotor = true;
+
+        //GetComponentInParent<Transform>().localRotation = tripod switch
+        // transform.localRotation = tripod switch
+        //  {
+        //     Tripod.B => Quaternion.Euler(HexapodController.AngleTouchDown, 0, 0),
+        //     Tripod.A => Quaternion.Euler(HexapodController.AngleLiftOff, 0, 0),
+        //     _ => throw new ArgumentOutOfRangeException()
+        // };
+    }
+
+    public void ContinuousRotation(float velocity)
+    {
+        state = State.Go;
+        joint.useLimits = false;
+        legMotor.targetVelocity = velocity;
+        legMotor.force = HexapodController.Pid.GetOutput(
+            Math.Abs(TargetVelocity() - Velocity()), 
+            Time.deltaTime
+            );
+        legMotor.freeSpin = false;
+        joint.motor = legMotor;
+        
+    }
+    public string GetDebugInfo()
+    {
+        return $"State: {state}\n" +
+               $"Stop State: {stopState}\n" +
+               $"Angle: {Angle():F2}\n" +
+               $"Target Velocity: {TargetVelocity():F2}\n" +
+               $"Current Velocity: {Velocity():F2}\n" +
+               $"Torque: {Torque():F2}";
+    }
+    public bool IsAtAngle(float targetAngle)
+    {
+        var angleDiff = Geometry.AngleModDiff(Angle(), targetAngle);
+        return angleDiff < HexapodController.LimitRes * 3 & angleDiff > -HexapodController.LimitRes * 3;
+    }
+
+    public void MoveToForward(float velocity, float targetAngle)
+    {
+        if (IsAtAngle(targetAngle))
+        {
+            ContinuousRotation(velocity);
         }
         else
         {
-            MoveWithConstantVelocity(angleError);
+            StopRotation();
+        }
+    }
+    public void MoveToOptimal(float velocity, float targetAngle)
+    {
+        var angleDiff = Geometry.AngleModDiff(Angle(), targetAngle);
+        if (IsAtAngle(targetAngle))
+        {
+            StopRotation();
+        }
+        else if (angleDiff > 180)
+        {
+            if (Angle() < targetAngle) 
+            {
+                StopRotation();
+            }
+            else 
+            {
+                ContinuousRotation(-velocity);
+            }
+        }
+        else
+        {
+            if (Angle() > targetAngle)
+            {
+                StopRotation();
+            }
+            else 
+            {
+                ContinuousRotation(velocity);
+            }
         }
     }
 
-    private void HoldPositionWithDynamicForce(float angleError)
+    public void StopRotation()
     {
-        // Compute the PID output for torque to apply
-        float force = pid.Compute(angleError, 0, Time.fixedDeltaTime);
-        force = Mathf.Clamp(force, -maxForce, maxForce); // Clamp force to max limits
-
-        // Apply torque around Z-axis to hold position
-        rb.AddTorque(Vector3.forward * force);
+        if (state != State.Go) return;
+        stopState = StopState.Stopping;
     }
 
-    private void MoveWithConstantVelocity(float angleError)
+
+    private void SetLimit()
     {
-        // Determine direction to rotate based on angle difference
-        float direction = angleError > 0 ? 1f : -1f;
-        // Convert desired velocity to radians per second, then to angular velocity in the rigidbody's scale
-        rb.angularVelocity = Vector3.forward * (desiredVelocity * Mathf.Deg2Rad * direction);
+        var targetAngle = Angle();
+        var limits = new JointLimits
+        {
+            max = targetAngle + HexapodController.LimitRes,
+            min = targetAngle - HexapodController.LimitRes,
+            // bounciness = 0.2f,
+            // bounceMinVelocity = 0.2f
+        };
+        limits.max = Geometry.AngleModDeg(limits.max);
+        limits.min = Geometry.AngleModDeg(limits.min); 
+        joint.limits = limits;
     }
 
-    // Call this method to rotate the leg to a new angle
-    
+    public bool IsAtLiftOff()
+    {
+        return IsAtAngle(HexapodController.AngleLiftOff);
+    }
+
+    public bool IsAtTouchDown()
+    {
+        return IsAtAngle(HexapodController.AngleTouchDown);
+    }
+    public float TargetVelocity()
+    {
+        return legMotor.targetVelocity;
+    }
+
+    public float Velocity()
+    {
+        return joint.velocity;
+    }
+
+    public float Torque()
+    {
+        return legMotor.force;
+    }
+
+    public float Angle()
+    {
+        return joint.angle;
+    }
 }
