@@ -4,13 +4,11 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - RhexLegRight
-  - RhexLegLeft
+  - TargetVelocity
+  - LegList
   - RhexLeg
   - LegAnchor
   - Hexapod
-  - TargetVelocity
-  - LegList
   layers:
   - Default
   - TransparentFX

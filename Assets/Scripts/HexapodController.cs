@@ -1,168 +1,85 @@
-using System;
+using UnityEngine;
 using System.Collections;
 using System.Linq;
-using UnityEngine;
 
 public class HexapodController : MonoBehaviour
 {
-    
+    public LegMotor[] tripod1; // left back, right center, left front
+    public LegMotor[] tripod2; // right back, left center, right front
 
-    public HexapodLeg[] legs;
-    private const float VelForward = 200f;
-    public const float AngleTouchDown = 45;
-    public const float AngleLiftOff = -45;
-    public const float LimitRes = 3f;
-    private const float Kp = 10f;
-    private const float Ki = 1f;
-    private const float Kd = 1f;
-    public const float DefaultMotorForce = 10f;
-    public static readonly Pid Pid = new Pid(Kp, Ki, Kd);
-    public State state;
-    
-    private void Awake()
-    {
-        LegSetup();      
-    }
-
-    public enum State
-    {
-        Walk,
-        Stand
-    }
-    private Coroutine walkingCoroutine;
-
-    public void Stand()
-    {
-        if (state == State.Stand)
-            return;
-        foreach (var leg in legs)
-        {
-            switch (leg.tripod)
-            {
-                case HexapodLeg.Tripod.A:
-                    leg.MoveToOptimal(VelForward, AngleTouchDown);
-                    break;
-                case HexapodLeg.Tripod.B:
-                    leg.MoveToOptimal(VelForward, AngleLiftOff);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-        state = State.Stand;
-    }
-    private IEnumerator StopWalking()
-    {
-        foreach (var leg in legs)
-        {
-            leg.MoveToOptimal(VelForward, AngleTouchDown);
-        }
-
-        yield break;
-    }
-    
-    private IEnumerator StartWalking()
-    {
-        foreach (var leg in legs)
-        {
-            switch (leg.tripod)
-            {
-                case HexapodLeg.Tripod.A:
-                    leg.MoveToOptimal(VelForward, AngleLiftOff);
-                    break;
-                case HexapodLeg.Tripod.B:
-                    leg.MoveToOptimal(VelForward, AngleTouchDown);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        yield break;
-    }
-
+    public float liftOffAngle = 30f; // Angle for lifting off the ground
+    public float touchDownAngle = -30f; // Angle for touching down
+    public float rotationSpeed = 100f; // Speed of rotation in degrees per second
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
-            //If a coroutine is currently running, stop it
-            if(walkingCoroutine != null)
-            {
-                StopCoroutine(walkingCoroutine);
-                walkingCoroutine = null;
-            }
-            walkingCoroutine = StartCoroutine(StartWalking());
+            StartCoroutine(WalkCycle());
         }
-        else if (Input.GetKeyUp(KeyCode.W))
+
+        if (Input.GetKeyUp(KeyCode.W))
         {
-            if(walkingCoroutine != null)
-            {
-                StopCoroutine(walkingCoroutine);
-                walkingCoroutine = null;
-            }
-            walkingCoroutine = StartCoroutine(StopWalking());
+            MoveToRestingPositions();
         }
     }
 
+    private void MoveToRestingPositions()
+    {
+        StopAllCoroutines(); // Stop the walk cycle
+        foreach (var leg in tripod1.Concat(tripod2))
+        {
+            leg.StopAndHoldPosition();
+        }
+    }
 
+    private IEnumerator WalkCycle()
+    {
+        while (true) // Continuously cycle the walk as long as 'W' is held down
+        {
+            // Lift off one tripod and touch down the other
+            yield return StartCoroutine(MoveLegsGroupAndHold(tripod1, liftOffAngle, rotationSpeed));
+            yield return StartCoroutine(MoveLegsGroupAndHold(tripod2, touchDownAngle, rotationSpeed));
 
-    private void StopMovement()
+            // Swap roles for the next cycle
+            yield return new WaitForSeconds(1); // Adjust wait time as needed for synchronization
+
+            if (!Input.GetKey(KeyCode.W))
+            {
+                MoveToRestingPositions();
+                break;
+            }
+        }
+    }
+
+    private IEnumerator MoveLegsGroupAndHold(LegMotor[] legs, float targetAngle, float speed)
     {
         foreach (var leg in legs)
         {
-            leg.StopRotation();
+            // Determine whether to rotate clockwise or counterclockwise based on shortest path
+            bool clockWise = DetermineShortestPath(leg.CurrentAngle, targetAngle);
+            leg.RotateToAngle(targetAngle, clockWise, speed);
         }
-    }
 
-    private void MoveForward()
-    { 
+        // Wait for all legs in the group to reach the target angle
+        bool allReached;
+        do
+        {
+            allReached = legs.All(leg => Mathf.Abs(Mathf.DeltaAngle(leg.CurrentAngle, targetAngle)) < 1f);
+            yield return null;
+        } while (!allReached);
+
+        // Once all legs have reached the target, hold their position
         foreach (var leg in legs)
         {
-            switch (leg.tripod)
-            {
-                case HexapodLeg.Tripod.A:
-                    // If the leg is at the liftoff angle, move to touchdown
-                    if (leg.IsAtLiftOff())
-                    {
-                        leg.MoveToOptimal(VelForward, AngleTouchDown);
-                    }
-                    // If the leg is at the touchdown angle, move to liftoff
-                    else if (leg.IsAtTouchDown())
-                    {
-                        leg.MoveToOptimal(VelForward, AngleLiftOff);
-                    }
-                    break;
-                case HexapodLeg.Tripod.B:
-                    // If the leg is at the liftoff angle, move to touchdown
-                    if (leg.IsAtLiftOff())
-                    {
-                        leg.MoveToOptimal(VelForward, AngleTouchDown);
-                    }
-                    // If the leg is at the touchdown angle, move to liftoff
-                    else if (leg.IsAtTouchDown())
-                    {
-                        leg.MoveToOptimal(VelForward, AngleLiftOff);
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            leg.StopAndHoldPosition();
         }
     }
 
-
-    private void LegSetup()
+    // Determines the shortest path to the target angle (clockwise or counterclockwise)
+    private static bool DetermineShortestPath(float currentAngle, float targetAngle)
     {
-        legs = (
-            from Transform child in transform 
-            where child.CompareTag("LegAnchor") 
-            select child.GetChild(0).GetComponent<HexapodLeg>()
-            ).ToArray();
-    }
-
-    public HexapodLeg[] GetLegList()
-    {
-        return legs;
+        var clockwiseDistance = Mathf.DeltaAngle(currentAngle, targetAngle);
+        return clockwiseDistance < 0;
     }
 }
