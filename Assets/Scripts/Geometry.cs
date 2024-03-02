@@ -1,4 +1,4 @@
-﻿public class Geometry
+﻿public static class Geometry
 {
     public static float AngleModDeg(float angle)
     {
