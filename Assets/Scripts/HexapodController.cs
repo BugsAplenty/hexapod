@@ -31,47 +31,100 @@ public class HexapodController : MonoBehaviour
     }
 
     private State state = State.Stop;
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
             state = State.Go;
             StartCoroutine(WalkCycle());
-        } else if (Input.GetKeyDown(KeyCode.A))
-        {
-        } else if (Input.GetKeyDown(KeyCode.S))
-        {
-        } else if (Input.GetKeyDown(KeyCode.D))
-        {
         }
-        else
+        else if (Input.GetKeyDown(KeyCode.A))
         {
-            // if (state == State.Stop)
-            // {
-            //     StartCoroutine(MoveLegsToRestingPositions());
-            // }
+            StartCoroutine(LeftWalkCycle());
+        }
+        else if (Input.GetKeyDown(KeyCode.S))
+        {
+            state = State.Go;
+            StartCoroutine(ReverseWalkCycle());
+        }
+        else if (Input.GetKeyDown(KeyCode.D))
+        {
+            StartCoroutine(RightWalkCycle());
         }
     }
 
-    private IEnumerator MoveLegsToRestingPositions()
+    private IEnumerator RightWalkCycle()
     {
-        var moveTripod1 = StartCoroutine(MoveTripodToRestingPosition(tripod1, AngleLiftOff));
-        var moveTripod2 = StartCoroutine(MoveTripodToRestingPosition(tripod2, AngleTouchDown));
-
-        yield return moveTripod1;
-        yield return moveTripod2;
-    }
-
-    private IEnumerator MoveTripodToRestingPosition(IEnumerable<LegMotor> tripod, float restAngle)
-    {
-        foreach (var leg in tripod)
+        while (state==State.Go)
         {
-            StartCoroutine(leg.MoveToAngleShortestDistance(restAngle, rotationSpeed));
+            yield return StartCoroutine(Step1());
+            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return StartCoroutine(Step2());
+            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
         }
-        yield return null;
+
+        yield break;
+
+        // Create internal coroutine to handle step 1
+        IEnumerator Step1()
+        {
+            // Start moving both tripods in parallel
+            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleTouchDown, TouchDownSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleLiftOff, -LiftOffSpeed));
+            
+            // Wait for both tripods to finish their movements
+            yield return moveTripod1;
+            yield return moveTripod2;
+        }
+
+        IEnumerator Step2()
+        {
+            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleLiftOff, LiftOffSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleTouchDown, -TouchDownSpeed));
+
+            // Wait for both tripods to finish their movements
+            yield return moveTripod1;
+            yield return moveTripod2;
+        }
     }
 
-    
+    private IEnumerator LeftWalkCycle()
+    {
+        while (state==State.Go)
+        {
+            yield return StartCoroutine(Step1());
+            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return StartCoroutine(Step2());
+            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+        }
+
+        yield break;
+
+        // Create internal coroutine to handle step 1
+        IEnumerator Step1()
+        {
+            // Start moving both tripods in parallel
+            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleTouchDown, -TouchDownSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleLiftOff, LiftOffSpeed));
+            
+            // Wait for both tripods to finish their movements
+            yield return moveTripod1;
+            yield return moveTripod2;
+        }
+
+        IEnumerator Step2()
+        {
+            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleLiftOff, -LiftOffSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleTouchDown, TouchDownSpeed));
+
+            // Wait for both tripods to finish their movements
+            yield return moveTripod1;
+            yield return moveTripod2;
+        }
+    }
+
+
     private IEnumerator WalkCycle()
     {
         while (state==State.Go)
@@ -80,11 +133,6 @@ public class HexapodController : MonoBehaviour
             yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
             yield return StartCoroutine(Step2());
             yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
-            Debug.Log(state);
-            if (Input.GetKeyUp(KeyCode.W))
-            {
-                state = State.Stop;
-            }
         }
 
         yield break;
@@ -95,7 +143,7 @@ public class HexapodController : MonoBehaviour
             // Start moving both tripods in parallel
             var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleLiftOff, TouchDownSpeed));
             var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleTouchDown, LiftOffSpeed));
-
+            
             // Wait for both tripods to finish their movements
             yield return moveTripod1;
             yield return moveTripod2;
@@ -112,11 +160,51 @@ public class HexapodController : MonoBehaviour
         }
     }
 
+    private IEnumerator ReverseWalkCycle()
+    {
+        while (state==State.Go)
+        {
+            yield return StartCoroutine(Step1());
+            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return StartCoroutine(Step2());
+            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+        }
+
+        yield break;
+
+        // Create internal coroutine to handle step 1
+        IEnumerator Step1()
+        {
+            // Start moving both tripods in parallel
+            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleTouchDown, -TouchDownSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleLiftOff, -LiftOffSpeed));
+            
+            // Wait for both tripods to finish their movements
+            yield return moveTripod1;
+            yield return moveTripod2;
+        }
+
+        IEnumerator Step2()
+        {
+            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleLiftOff, -LiftOffSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleTouchDown, -TouchDownSpeed));
+
+            // Wait for both tripods to finish their movements
+            yield return moveTripod1;
+            yield return moveTripod2;
+        }
+    }
+
     private IEnumerator TripodStepForward(IEnumerable<LegMotor> tripod, float targetAngle, float targetVelocity)
     {
         // Start movement coroutine for each leg using a for loop and await completion after the for loop
         foreach(var leg in tripod)
         {
+            if (!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.S) &&
+                !Input.GetKey(KeyCode.D))
+            {
+                yield break;
+            }
             // Debug.Log(leg);
             StartCoroutine(leg.MoveToAngleAt(targetAngle, targetVelocity, true));
         }
