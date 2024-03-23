@@ -7,10 +7,12 @@ public class HexapodController : MonoBehaviour
 {
     public LegMotor[] tripod1; // left back, right center, left front
     public LegMotor[] tripod2; // right back, left center, right front
-    private const float AngleLiftOff = -35;
-    private const float AngleTouchDown = 35;
-    private const float LiftOffSpeed = 500;
+    private const float AngleLiftOff = -45;
+    private const float AngleTouchDown = 45;
     private const float TouchDownSpeed = 100;
+    private const float RangeTouchDown = AngleTouchDown - AngleLiftOff;
+    private const float RangeLiftOff = 360 - RangeTouchDown;
+    private const float LiftOffSpeed = TouchDownSpeed * (RangeLiftOff / RangeTouchDown);
     public static readonly Pid Pid = new Pid(Kp, Ki, Kd);
     public const float LimitRes = 3f;
     private const float Kp = 10f;
