@@ -73,7 +73,7 @@ public class LegMotor : MonoBehaviour
 
     private float AngleDeg()
     {
-        return hingeJoint.angle;
+        return transform.rotation.z;
     }
 }
 

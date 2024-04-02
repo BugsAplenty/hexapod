@@ -6,6 +6,13 @@ public class DebugPanelController : MonoBehaviour
 {
     public HexapodController hexapodController; // Assign in inspector
     public TextMeshProUGUI debugPanelText; // Assign your TextMeshProUGUI component here
+    private void Start()
+    {
+        // Assuming debugPanelText is your TextMeshProUGUI component
+        debugPanelText.enableAutoSizing = true;
+        debugPanelText.fontSizeMin = 2; // Minimum font size
+        debugPanelText.fontSizeMax = 40; // Maximum font size
+    }
 
     private void Update()
     {
