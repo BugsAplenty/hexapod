@@ -18,14 +18,13 @@ public class LegMotor : MonoBehaviour
         {
             StartCoroutine(StartMotor(rotationSpeed, clockwise));
         }
-        while (true)
+        while (!HasReachedTarget)
         {
             angleDiff = Geometry.AngleModDiff(targetAngle, AngleDeg());
             if (Math.Abs(angleDiff) < 5f)
             {
                 StartCoroutine(StopMotor());
-                HasReachedTarget = true;
-                break;
+                HasReachedTarget = false;
             }
             yield return null;
         }

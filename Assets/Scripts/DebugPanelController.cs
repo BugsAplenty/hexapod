@@ -17,7 +17,7 @@ public class DebugPanelController : MonoBehaviour
         var debugText = "";
     
         // Using tags or another method to identify each leg motor, append their info to the debugText
-        debugText += hexapodController.tripod1.Concat(hexapodController.tripod2).Aggregate(
+        debugText += hexapodController.LegMotors.Aggregate(
             "", (current, legMotor) => current + legMotor.gameObject.tag + ": " + legMotor.GetDebugInfo() + "\n\n");
     
         debugPanelText.text = debugText;

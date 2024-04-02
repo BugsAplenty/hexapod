@@ -1292,14 +1292,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4f46a2943004db41a12dcbba55a5c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tripod1:
-  - {fileID: 8164078558718296934}
-  - {fileID: 8164078559875373844}
-  - {fileID: 8164078559481579750}
-  tripod2:
-  - {fileID: 8164078559369444618}
-  - {fileID: 8164078559596777540}
-  - {fileID: 8164078558675050545}
+  frontLeft: {fileID: 8164078559875373844}
+  frontRight: {fileID: 8164078559596777540}
+  backLeft: {fileID: 8164078558718296934}
+  backRight: {fileID: 8164078559369444618}
+  centerLeft: {fileID: 8164078558675050545}
+  centerRight: {fileID: 8164078559481579750}
   liftOffAngle: 30
   touchDownAngle: -30
   rotationSpeed: 100

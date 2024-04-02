@@ -4,25 +4,22 @@ using System.Collections.Generic;
 using System.Linq;
 
 public class HexapodController : MonoBehaviour
-{
-    public LegMotor[] tripod1; // left back, right center, left front
-    public LegMotor[] tripod2; // right back, left center, right front
+{   
+    public LegMotor frontLeft;
+    public LegMotor frontRight;
+    public LegMotor backLeft;
+    public LegMotor backRight;
+    public LegMotor centerLeft;
+    public LegMotor centerRight;
+    private IEnumerable<LegMotor> Tripod1 => new[] {frontLeft, backLeft, centerRight};
+    private IEnumerable<LegMotor> Tripod2 => new[] {frontRight, backRight, centerLeft};
+    public IEnumerable<LegMotor> LegMotors => new[] {frontLeft, frontRight, backLeft, backRight, centerLeft, centerRight};
     private const float AngleLiftOff = -45;
     private const float AngleTouchDown = 45;
     private const float TouchDownSpeed = 100;
     private const float RangeTouchDown = AngleTouchDown - AngleLiftOff;
     private const float RangeLiftOff = 360 - RangeTouchDown;
     private const float LiftOffSpeed = TouchDownSpeed * (RangeLiftOff / RangeTouchDown);
-    public static readonly Pid Pid = new Pid(Kp, Ki, Kd);
-    public const float LimitRes = 3f;
-    private const float Kp = 10f;
-    private const float Ki = 1f;
-    private const float Kd = 1f;
-    public float liftOffAngle = 30f; // Angle for lifting off the ground
-    public float touchDownAngle = -30f; // Angle for touching down
-    public float rotationSpeed = 100f; // Speed of rotation in degrees per second
-    private bool shouldBeWalking = false; // Tracks if the hexapod is walking
-    private int activeTripodGroup = 0; // 0: None, 1: Tripod1, 2: Tripod2
     // State enumerator containing states - stop, go
     private enum State
     {
@@ -31,6 +28,7 @@ public class HexapodController : MonoBehaviour
     }
 
     private State state = State.Stop;
+
 
     private void Update()
     {
@@ -59,9 +57,9 @@ public class HexapodController : MonoBehaviour
         while (state==State.Go)
         {
             yield return StartCoroutine(Step1());
-            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
             yield return StartCoroutine(Step2());
-            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
         }
 
         yield break;
@@ -70,8 +68,8 @@ public class HexapodController : MonoBehaviour
         IEnumerator Step1()
         {
             // Start moving both tripods in parallel
-            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleTouchDown, TouchDownSpeed));
-            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleLiftOff, -LiftOffSpeed));
+            var moveTripod1 = StartCoroutine(TripodStepForward(Tripod1, AngleTouchDown, TouchDownSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(Tripod2, AngleLiftOff, -LiftOffSpeed));
             
             // Wait for both tripods to finish their movements
             yield return moveTripod1;
@@ -80,8 +78,8 @@ public class HexapodController : MonoBehaviour
 
         IEnumerator Step2()
         {
-            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleLiftOff, LiftOffSpeed));
-            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleTouchDown, -TouchDownSpeed));
+            var moveTripod1 = StartCoroutine(TripodStepForward(Tripod1, AngleLiftOff, LiftOffSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(Tripod2, AngleTouchDown, -TouchDownSpeed));
 
             // Wait for both tripods to finish their movements
             yield return moveTripod1;
@@ -94,9 +92,9 @@ public class HexapodController : MonoBehaviour
         while (state==State.Go)
         {
             yield return StartCoroutine(Step1());
-            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
             yield return StartCoroutine(Step2());
-            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
         }
 
         yield break;
@@ -105,8 +103,8 @@ public class HexapodController : MonoBehaviour
         IEnumerator Step1()
         {
             // Start moving both tripods in parallel
-            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleTouchDown, -TouchDownSpeed));
-            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleLiftOff, LiftOffSpeed));
+            var moveTripod1 = StartCoroutine(TripodStepForward(Tripod1, AngleTouchDown, -TouchDownSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(Tripod2, AngleLiftOff, LiftOffSpeed));
             
             // Wait for both tripods to finish their movements
             yield return moveTripod1;
@@ -115,8 +113,8 @@ public class HexapodController : MonoBehaviour
 
         IEnumerator Step2()
         {
-            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleLiftOff, -LiftOffSpeed));
-            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleTouchDown, TouchDownSpeed));
+            var moveTripod1 = StartCoroutine(TripodStepForward(Tripod1, AngleLiftOff, -LiftOffSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(Tripod2, AngleTouchDown, TouchDownSpeed));
 
             // Wait for both tripods to finish their movements
             yield return moveTripod1;
@@ -127,12 +125,20 @@ public class HexapodController : MonoBehaviour
 
     private IEnumerator WalkCycle()
     {
+        var tripod1 = new LegMotor[3];
+        var tripod2 = new LegMotor[3];
+        tripod1[0] = frontLeft;
+        tripod1[1] = backRight;
+        tripod1[2] = centerLeft;
+        tripod2[0] = frontRight;
+        tripod2[1] = backLeft;
+        tripod2[2] = centerRight;
         while (state==State.Go)
         {
             yield return StartCoroutine(Step1());
-            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
             yield return StartCoroutine(Step2());
-            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
         }
 
         yield break;
@@ -165,9 +171,9 @@ public class HexapodController : MonoBehaviour
         while (state==State.Go)
         {
             yield return StartCoroutine(Step1());
-            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
             yield return StartCoroutine(Step2());
-            yield return new WaitUntil(() => tripod1.Concat(tripod2).All(leg => leg.HasReachedTarget));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
         }
 
         yield break;
@@ -176,8 +182,8 @@ public class HexapodController : MonoBehaviour
         IEnumerator Step1()
         {
             // Start moving both tripods in parallel
-            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleTouchDown, -TouchDownSpeed));
-            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleLiftOff, -LiftOffSpeed));
+            var moveTripod1 = StartCoroutine(TripodStepForward(Tripod1, AngleTouchDown, -TouchDownSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(Tripod2, AngleLiftOff, -LiftOffSpeed));
             
             // Wait for both tripods to finish their movements
             yield return moveTripod1;
@@ -186,8 +192,8 @@ public class HexapodController : MonoBehaviour
 
         IEnumerator Step2()
         {
-            var moveTripod1 = StartCoroutine(TripodStepForward(tripod1, AngleLiftOff, -LiftOffSpeed));
-            var moveTripod2 = StartCoroutine(TripodStepForward(tripod2, AngleTouchDown, -TouchDownSpeed));
+            var moveTripod1 = StartCoroutine(TripodStepForward(Tripod1, AngleLiftOff, -LiftOffSpeed));
+            var moveTripod2 = StartCoroutine(TripodStepForward(Tripod2, AngleTouchDown, -TouchDownSpeed));
 
             // Wait for both tripods to finish their movements
             yield return moveTripod1;
