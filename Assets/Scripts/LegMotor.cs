@@ -9,7 +9,7 @@ public class LegMotor : MonoBehaviour
 
     public bool HasReachedTarget { get; private set; }
 
-    public IEnumerator MoveToAngleAt(float targetAngle, float rotationSpeed, bool clockwise)
+    public IEnumerator MoveToAngleAt(float targetAngle, float rotationSpeed)
     {
         if (!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.S) &&
             !Input.GetKey(KeyCode.D))
@@ -21,7 +21,7 @@ public class LegMotor : MonoBehaviour
         var angleDiff = Geometry.AngleModDiff(targetAngle,AngleDeg());
         if (Math.Abs(angleDiff) > 10f)
         {
-            StartCoroutine(StartMotor(rotationSpeed, clockwise));
+            StartCoroutine(StartMotor(rotationSpeed));
         }
         while (!HasReachedTarget)
         {
@@ -39,17 +39,17 @@ public class LegMotor : MonoBehaviour
     {
         var angleDiff = Geometry.AngleModDiff(targetAngle, AngleDeg());
         StartCoroutine(Math.Abs(angleDiff) < 180
-            ? MoveToAngleAt(targetAngle, rotationSpeed, true)
-            : MoveToAngleAt(targetAngle, rotationSpeed, false));
+            ? MoveToAngleAt(targetAngle, -rotationSpeed)
+            : MoveToAngleAt(targetAngle, rotationSpeed));
         yield return null;
     }
 
-    private IEnumerator StartMotor(float rotationSpeed, bool clockwise)
+    private IEnumerator StartMotor(float rotationSpeed)
     {
         hingeJoint.useLimits = false;
         hingeJoint.useMotor = true;
         var motor = hingeJoint.motor;
-        motor.targetVelocity = rotationSpeed * (clockwise ? -1 : 1);
+        motor.targetVelocity = -rotationSpeed;
         motor.force = 50f;
         hingeJoint.motor = motor;
         yield return null;
