@@ -18,18 +18,18 @@ public class LegMotor : MonoBehaviour
         }
         HasReachedTarget = false;
         targetAngleDeg = targetAngle;
-        var angleDiff = targetAngle - AngleDeg();
-        if (Math.Abs(angleDiff) > 5f)
+        var angleDiff = Geometry.AngleModDiff(targetAngle,AngleDeg());
+        if (Math.Abs(angleDiff) > 10f)
         {
             StartCoroutine(StartMotor(rotationSpeed, clockwise));
         }
         while (!HasReachedTarget)
         {
-            angleDiff = targetAngle - AngleDeg();
-            if (Math.Abs(angleDiff) < 5f)
+            angleDiff = Geometry.AngleModDiff(targetAngle, AngleDeg());
+            if (Math.Abs(angleDiff) < 10f)
             {
+                HasReachedTarget = true; // Set this before stopping the motor
                 StartCoroutine(StopMotor());
-                HasReachedTarget = true;
             }
             yield return null;
         }
@@ -37,7 +37,7 @@ public class LegMotor : MonoBehaviour
 
     public IEnumerator MoveToAngleShortestDistance(float targetAngle, float rotationSpeed)
     {
-        var angleDiff = targetAngle - AngleDeg();
+        var angleDiff = Geometry.AngleModDiff(targetAngle, AngleDeg());
         StartCoroutine(Math.Abs(angleDiff) < 180
             ? MoveToAngleAt(targetAngle, rotationSpeed, true)
             : MoveToAngleAt(targetAngle, rotationSpeed, false));
@@ -50,7 +50,7 @@ public class LegMotor : MonoBehaviour
         hingeJoint.useMotor = true;
         var motor = hingeJoint.motor;
         motor.targetVelocity = rotationSpeed * (clockwise ? -1 : 1);
-        motor.force = 10f;
+        motor.force = 50f;
         hingeJoint.motor = motor;
         yield return null;
     }
@@ -70,16 +70,16 @@ public class LegMotor : MonoBehaviour
         hingeJoint.useLimits = true;
         hingeJoint.useMotor = false;
         var limits = hingeJoint.limits;
-        var currentAngle = AngleDeg();
-        limits.min = currentAngle - 5f;
-        limits.max = currentAngle + 5f;
+        var currentAngle = hingeJoint.angle;
+        limits.min = currentAngle - 1f;
+        limits.max = currentAngle + 1f;
         hingeJoint.limits = limits;
         yield return null;
     }
 
     private float AngleDeg()
     {
-        return transform.rotation.eulerAngles.z - 180f;
+        return 180f - transform.localRotation.eulerAngles.z;
     }
 }
 

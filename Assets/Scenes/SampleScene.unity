@@ -1299,7 +1299,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1321,6 +1321,7 @@ MonoBehaviour:
   backRight: {fileID: 8164078559369444618}
   centerLeft: {fileID: 8164078558675050545}
   centerRight: {fileID: 8164078559481579750}
+  touchDownSpeed: 200
 --- !u!1 &8164078558675050541
 GameObject:
   m_ObjectHideFlags: 0
