@@ -14,9 +14,10 @@ public class HexapodController : MonoBehaviour
     private IEnumerable<LegMotor> Tripod1 => new[] {frontLeft, backLeft, centerRight};
     private IEnumerable<LegMotor> Tripod2 => new[] {frontRight, backRight, centerLeft};
     public IEnumerable<LegMotor> LegMotors => new[] {frontLeft, frontRight, backLeft, backRight, centerLeft, centerRight};
-    private const float AngleLiftOff = -45;
-    private const float AngleTouchDown = 45;
+    private const float AngleLiftOff = 45;
+    private const float AngleTouchDown = 360 - AngleLiftOff;
     private const float TouchDownSpeed = 100;
+    private const float ToRestSpeed = 500;
     private const float RangeTouchDown = AngleTouchDown - AngleLiftOff;
     private const float RangeLiftOff = 360 - RangeTouchDown;
     private const float LiftOffSpeed = TouchDownSpeed * (RangeLiftOff / RangeTouchDown);
@@ -27,7 +28,7 @@ public class HexapodController : MonoBehaviour
         Go
     }
 
-    private State state = State.Stop;
+    private State state = State.Go;
 
 
     private void Update()
@@ -50,7 +51,29 @@ public class HexapodController : MonoBehaviour
         {
             StartCoroutine(RightWalkCycle());
         }
+        else
+        {
+            if (state == State.Stop) return;
+            StartCoroutine(MoveToRest());
+            state = State.Stop;
+        }
     }
+
+    private IEnumerator MoveToRest() {
+        StartCoroutine(MoveTripodToRest(Tripod1, AngleLiftOff));
+        StartCoroutine(MoveTripodToRest(Tripod2, AngleTouchDown));
+        yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
+    }
+
+    private string MoveTripodToRest(IEnumerable<LegMotor> tripod, float restAngle)
+    {
+        foreach (var leg in tripod)
+        {
+            StartCoroutine(leg.MoveToAngleShortestDistance(restAngle, ToRestSpeed));
+        }
+        return null;
+    }
+
 
     private IEnumerator RightWalkCycle()
     {
@@ -206,11 +229,6 @@ public class HexapodController : MonoBehaviour
         // Start movement coroutine for each leg using a for loop and await completion after the for loop
         foreach(var leg in tripod)
         {
-            if (!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.S) &&
-                !Input.GetKey(KeyCode.D))
-            {
-                yield break;
-            }
             // Debug.Log(leg);
             StartCoroutine(leg.MoveToAngleAt(targetAngle, targetVelocity, true));
         }
