@@ -19,14 +19,14 @@ public class LegMotor : MonoBehaviour
         HasReachedTarget = false;
         targetAngleDeg = targetAngle;
         var angleDiff = Geometry.AngleModDiff(targetAngle,AngleDeg());
-        if (Math.Abs(angleDiff) > 10f)
+        if (Math.Abs(angleDiff) > 15f)
         {
             StartCoroutine(StartMotor(rotationSpeed));
         }
         while (!HasReachedTarget)
         {
             angleDiff = Geometry.AngleModDiff(targetAngle, AngleDeg());
-            if (Math.Abs(angleDiff) < 10f)
+            if (Math.Abs(angleDiff) < 15f)
             {
                 HasReachedTarget = true; // Set this before stopping the motor
                 StartCoroutine(StopMotor());
@@ -71,8 +71,8 @@ public class LegMotor : MonoBehaviour
         hingeJoint.useMotor = false;
         var limits = hingeJoint.limits;
         var currentAngle = hingeJoint.angle;
-        limits.min = currentAngle - 1f;
-        limits.max = currentAngle + 1f;
+        limits.min = currentAngle - 5f;
+        limits.max = currentAngle + 5f;
         hingeJoint.limits = limits;
         yield return null;
     }

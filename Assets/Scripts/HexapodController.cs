@@ -11,7 +11,7 @@ public class HexapodController : MonoBehaviour
     public LegMotor backRight;
     public LegMotor centerLeft;
     public LegMotor centerRight;
-    public float touchDownSpeed = 200f;
+    public float touchDownSpeed = 100f;
     private IEnumerable<LegMotor> Tripod1 => new[] {frontLeft, backLeft, centerRight};
     private IEnumerable<LegMotor> Tripod2 => new[] {frontRight, backRight, centerLeft};
     public IEnumerable<LegMotor> LegMotors => new[] {frontLeft, frontRight, backLeft, backRight, centerLeft, centerRight};
@@ -100,12 +100,19 @@ public class HexapodController : MonoBehaviour
     {
         while (isWalking)
         {
-            // Step 1: Move tripod1 to AngleTouchDown, tripod2 to AngleLiftOff
-            yield return StartCoroutine(MoveTripods(AngleTouchDown, touchDownSpeed, AngleLiftOff, liftOffSpeed));
+            StartCoroutine(backRight.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
+            StartCoroutine(frontRight.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
+            StartCoroutine(centerRight.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
+            StartCoroutine(backLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
+            StartCoroutine(frontLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
+            StartCoroutine(centerLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
             yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
-
-            // Step 2: Move tripod1 to AngleLiftOff, tripod2 to AngleTouchDown
-            yield return StartCoroutine(MoveTripods(AngleLiftOff, liftOffSpeed, AngleTouchDown, touchDownSpeed));
+            StartCoroutine(backRight.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
+            StartCoroutine(frontRight.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
+            StartCoroutine(centerRight.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
+            StartCoroutine(backLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
+            StartCoroutine(frontLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
+            StartCoroutine(centerLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
             yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
         }
     }
@@ -114,13 +121,25 @@ public class HexapodController : MonoBehaviour
     {
         while (isWalking)
         {
-            // Step 1: Move tripod1 to AngleTouchDown, tripod2 to AngleLiftOff
-            yield return StartCoroutine(MoveTripods(AngleTouchDown, touchDownSpeed, AngleLiftOff, liftOffSpeed, true));
+            StartCoroutine(backRight.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
+            StartCoroutine(frontRight.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
+            StartCoroutine(centerLeft.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
+            // Sleep for 0.1 seconds 
+            yield return new WaitForSeconds(0.1f);
+            StartCoroutine(backLeft.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
+            StartCoroutine(frontLeft.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
+            StartCoroutine(centerRight.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
+            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
+            StartCoroutine(backRight.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
+            StartCoroutine(frontRight.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
+            StartCoroutine(centerLeft.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
+            // Sleep for 0.1 seconds 
+            yield return new WaitForSeconds(0.1f);
+            StartCoroutine(backLeft.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
+            StartCoroutine(frontLeft.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
+            StartCoroutine(centerRight.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
             yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
 
-            // Step 2: Move tripod1 to AngleLiftOff, tripod2 to AngleTouchDown
-            yield return StartCoroutine(MoveTripods(AngleLiftOff, liftOffSpeed, AngleTouchDown, touchDownSpeed, true));
-            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
         }
     }
 
@@ -151,55 +170,20 @@ public class HexapodController : MonoBehaviour
         }
     }
 
-    private IEnumerator MoveTripods(float angleForTripod1, float speedForTripod1, float angleForTripod2, float speedForTripod2, bool isTurning = false)
+    private IEnumerator MoveTripods(float angleForTripod1, float speedForTripod1, float angleForTripod2, float speedForTripod2)
     {
-        // Initiating movement for Tripod 1 legs
-        foreach (var leg in Tripod1)
         {
-            switch (isTurning)
+            // For forward or reverse walking, move all legs normally
+            foreach (var leg in Tripod1)
             {
-                case true when leg == centerRight:
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod1, -speedForTripod1));
-                    break;
-                case true when !(leg == centerRight):
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod1, -speedForTripod1));
-                    break;
-                case false when leg == centerRight:
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod1, speedForTripod1));
-                    break;
-                case false when !(leg == centerRight):
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod1, speedForTripod1));
-                    break;
-                default:
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod1, speedForTripod1));
-                    break;
+                StartCoroutine(leg.MoveToAngleAt(angleForTripod1, speedForTripod1));
+            }
+
+            foreach (var leg in Tripod2)
+            {
+                StartCoroutine(leg.MoveToAngleAt(angleForTripod2, speedForTripod2));
             }
         }
-
-        // Initiating movement for Tripod 2 legs
-        foreach (var leg in Tripod2)
-        {
-            switch (isTurning)
-            {
-                case true when leg == centerLeft:
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod2, -speedForTripod2));
-                    break;
-                case true when !(leg == centerLeft):
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod2, -speedForTripod2));
-                    break;
-                case false when leg == centerLeft:
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod2, speedForTripod2));
-                    break;
-                case false when !(leg == centerLeft):
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod2, speedForTripod2));
-                    break;
-                default:
-                    StartCoroutine(leg.MoveToAngleAt(angleForTripod2, speedForTripod2));
-                    break;
-            }
-        }
-
-        // Wait for all movements to complete
         yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
     }
 }
