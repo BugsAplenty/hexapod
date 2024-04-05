@@ -87,57 +87,87 @@ public class HexapodController : MonoBehaviour
     
     private IEnumerator MoveToRest()
     {
-        foreach (var leg in LegMotors)
-        {
-            StartCoroutine(leg.MoveToAngleShortestDistance(AngleLiftOff, ToRestSpeed));
-        }
-        isWalking = false;
-        yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
-    }
+        var coroutines = LegMotors.Select(leg => StartCoroutine(leg.MoveToAngleShortestDistance(AngleLiftOff, ToRestSpeed))).ToList();
 
+        // Wait for all legs to complete their movements to the rest position
+        foreach (var coroutine in coroutines)
+        {
+            yield return coroutine;
+        }
+
+        isWalking = false;
+    }
 
     private IEnumerator LeftTurnCycle()
+{
+    isWalking = true;
+    while (isWalking)
     {
-        while (isWalking)
-        {
-            StartCoroutine(backRight.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
-            StartCoroutine(frontRight.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
-            StartCoroutine(centerRight.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
-            StartCoroutine(backLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
-            StartCoroutine(frontLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
-            StartCoroutine(centerLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
-            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
-            StartCoroutine(backRight.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
-            StartCoroutine(frontRight.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
-            StartCoroutine(centerRight.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
-            StartCoroutine(backLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
-            StartCoroutine(frontLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
-            StartCoroutine(centerLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
-            yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
-        }
+        // Initiating the turn by moving each leg to its correct position and speed for a left turn
+        var coroutines = new List<Coroutine>();
+        coroutines.Add(StartCoroutine(backRight.MoveToAngleAt(AngleTouchDown, liftOffSpeed)));
+        coroutines.Add(StartCoroutine(frontRight.MoveToAngleAt(AngleTouchDown, liftOffSpeed)));
+        // CenterRight moves with opposite angle and speed
+        coroutines.Add(StartCoroutine(centerRight.MoveToAngleAt(AngleLiftOff, -touchDownSpeed)));
+        coroutines.Add(StartCoroutine(backLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed)));
+        coroutines.Add(StartCoroutine(frontLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed)));
+        // CenterLeft moves with opposite angle and speed
+        coroutines.Add(StartCoroutine(centerLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed)));
+
+        // Wait for all legs to complete the first half of the turn
+        yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
+
+
+        // Clearing coroutines list for the next set of movements
+        coroutines.Clear();
+
+        // Second half of the turn
+        coroutines.Add(StartCoroutine(backRight.MoveToAngleAt(AngleLiftOff, touchDownSpeed)));
+        coroutines.Add(StartCoroutine(frontRight.MoveToAngleAt(AngleLiftOff, touchDownSpeed)));
+        // CenterRight moves with opposite angle and speed
+        coroutines.Add(StartCoroutine(centerRight.MoveToAngleAt(AngleTouchDown, -liftOffSpeed)));
+        coroutines.Add(StartCoroutine(backLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed)));
+        coroutines.Add(StartCoroutine(frontLeft.MoveToAngleAt(AngleLiftOff, -liftOffSpeed)));
+        // CenterLeft moves with opposite angle and speed
+        coroutines.Add(StartCoroutine(centerLeft.MoveToAngleAt(AngleTouchDown, -touchDownSpeed)));
+
+        // Wait for all legs to complete the second half of the turn
+        yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
+
     }
+}
 
     private IEnumerator RightTurnCycle()
     {
+        isWalking = true;
         while (isWalking)
         {
-            StartCoroutine(backRight.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
-            StartCoroutine(frontRight.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
-            StartCoroutine(centerLeft.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
-            // Sleep for 0.1 seconds 
-            yield return new WaitForSeconds(0.1f);
-            StartCoroutine(backLeft.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
-            StartCoroutine(frontLeft.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
-            StartCoroutine(centerRight.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
+            // Similar approach as LeftTurnCycle but with adjusted angles and speeds for a right turn
+            var coroutines = new List<Coroutine>
+            {
+                StartCoroutine(backRight.MoveToAngleAt(AngleLiftOff, -liftOffSpeed)),
+                StartCoroutine(frontRight.MoveToAngleAt(AngleLiftOff, -liftOffSpeed)),
+                // CenterLeft moves with opposite angle and speed
+                StartCoroutine(centerLeft.MoveToAngleAt(AngleTouchDown, touchDownSpeed)),
+                StartCoroutine(backLeft.MoveToAngleAt(AngleLiftOff, touchDownSpeed)),
+                StartCoroutine(frontLeft.MoveToAngleAt(AngleLiftOff, touchDownSpeed)),
+                // CenterRight moves with opposite angle and speed
+                StartCoroutine(centerRight.MoveToAngleAt(AngleTouchDown, -liftOffSpeed))
+            };
             yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
-            StartCoroutine(backRight.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
-            StartCoroutine(frontRight.MoveToAngleAt(AngleTouchDown, -touchDownSpeed));
-            StartCoroutine(centerLeft.MoveToAngleAt(AngleLiftOff, touchDownSpeed));
-            // Sleep for 0.1 seconds 
-            yield return new WaitForSeconds(0.1f);
-            StartCoroutine(backLeft.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
-            StartCoroutine(frontLeft.MoveToAngleAt(AngleTouchDown, liftOffSpeed));
-            StartCoroutine(centerRight.MoveToAngleAt(AngleLiftOff, -liftOffSpeed));
+
+            coroutines.Clear();
+
+            // Second half of the turn
+            coroutines.Add(StartCoroutine(backRight.MoveToAngleAt(AngleTouchDown, -touchDownSpeed)));
+            coroutines.Add(StartCoroutine(frontRight.MoveToAngleAt(AngleTouchDown, -touchDownSpeed)));
+            // CenterLeft moves with opposite angle and speed
+            coroutines.Add(StartCoroutine(centerLeft.MoveToAngleAt(AngleLiftOff, liftOffSpeed)));
+            coroutines.Add(StartCoroutine(backLeft.MoveToAngleAt(AngleTouchDown, liftOffSpeed)));
+            coroutines.Add(StartCoroutine(frontLeft.MoveToAngleAt(AngleTouchDown, liftOffSpeed)));
+            // CenterRight moves with opposite angle and speed
+            coroutines.Add(StartCoroutine(centerRight.MoveToAngleAt(AngleLiftOff, -touchDownSpeed)));
+
             yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
 
         }
