@@ -11,22 +11,17 @@ public class LegMotor : MonoBehaviour
 
     public IEnumerator MoveToAngleAt(float targetAngle, float rotationSpeed)
     {
+        targetAngleDeg = targetAngle;
         if (!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.S) &&
             !Input.GetKey(KeyCode.D))
         {
             yield break;
         }
         HasReachedTarget = false;
-        targetAngleDeg = targetAngle;
-        var angleDiff = Geometry.AngleModDiff(targetAngle,AngleDeg());
-        if (Math.Abs(angleDiff) > 15f)
-        {
-            StartCoroutine(StartMotor(rotationSpeed));
-        }
+        StartCoroutine(StartMotor(rotationSpeed));
         while (!HasReachedTarget)
         {
-            angleDiff = Geometry.AngleModDiff(targetAngle, AngleDeg());
-            if (Math.Abs(angleDiff) < 15f)
+            if (Math.Abs(targetAngle - AngleDeg()) < 20f)
             {
                 HasReachedTarget = true; // Set this before stopping the motor
                 StartCoroutine(StopMotor());
@@ -59,6 +54,7 @@ public class LegMotor : MonoBehaviour
     {
         return $"Current angle: {AngleDeg():F2}°\n" +
                $"Current velocity: {hingeJoint.velocity:F2}°/s\n" +
+               $"Current motor force: {hingeJoint.motor.force:F2}\n" +
                $"Target angle: {targetAngleDeg:F2}°\n" +
                $"Target velocity: {hingeJoint.motor.targetVelocity:F2}°/s\n" +
                $"Is motor enabled: {hingeJoint.useMotor}\n" +
@@ -67,13 +63,13 @@ public class LegMotor : MonoBehaviour
     
     private IEnumerator StopMotor()
     {
-        hingeJoint.useLimits = true;
+        // hingeJoint.useLimits = true;
         hingeJoint.useMotor = false;
-        var limits = hingeJoint.limits;
-        var currentAngle = hingeJoint.angle;
-        limits.min = currentAngle - 5f;
-        limits.max = currentAngle + 5f;
-        hingeJoint.limits = limits;
+        // var limits = hingeJoint.limits;
+        // var currentAngle = hingeJoint.angle;
+        // limits.min = currentAngle - 50f;
+        // limits.max = currentAngle + 50f;
+        // hingeJoint.limits = limits;
         yield return null;
     }
 
