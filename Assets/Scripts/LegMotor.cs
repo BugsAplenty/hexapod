@@ -67,8 +67,8 @@ public class LegMotor : MonoBehaviour
         hingeJoint.useMotor = false;
         // var limits = hingeJoint.limits;
         // var currentAngle = hingeJoint.angle;
-        // limits.min = currentAngle - 50f;
-        // limits.max = currentAngle + 50f;
+        // limits.min = currentAngle - 5f;
+        // limits.max = currentAngle + 5f;
         // hingeJoint.limits = limits;
         yield return null;
     }
