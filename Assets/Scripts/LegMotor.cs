@@ -1,14 +1,31 @@
 using System;
 using System.Collections;
+using TMPro;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 public class LegMotor : MonoBehaviour
 {
     public new HingeJoint hingeJoint;
+    public new Rigidbody rigidbody;
     private float targetAngleDeg;
-
     public bool HasReachedTarget { get; private set; }
-
+    private void OnCollisionStay(Collision collision)
+    {
+        foreach (ContactPoint contact in collision.contacts)
+        {
+            // Calculate the normal force
+            Vector3 normalForce = contact.normal * (rigidbody.mass * Physics.gravity.magnitude);
+            
+            // Determine the direction of friction (opposite to the velocity)
+            Vector3 frictionDirection = -rigidbody.linearVelocity.normalized;
+            float frictionMagnitude = 1f * normalForce.magnitude; // Assume a friction coefficient
+            Vector3 frictionForce = frictionDirection * frictionMagnitude;
+            
+            // Apply the friction force at the point of contact
+            rigidbody.AddForceAtPosition(frictionForce, contact.point);
+        }
+    }
     public IEnumerator MoveToAngleAt(float targetAngle, float rotationSpeed)
     {
         targetAngleDeg = targetAngle;
@@ -18,24 +35,23 @@ public class LegMotor : MonoBehaviour
             yield break;
         }
         HasReachedTarget = false;
-        StartCoroutine(StartMotor(rotationSpeed));
         while (!HasReachedTarget)
         {
-            if (Math.Abs(targetAngle - AngleDeg()) < 20f)
+            var angleToRotate = Math.Abs(targetAngle - AngleDeg());
+            var step = -rotationSpeed * Time.deltaTime;
+            rigidbody.MoveRotation(Quaternion.Euler(0, 0, rigidbody.rotation.eulerAngles.z + step));
+            if (angleToRotate < 2f)
             {
                 HasReachedTarget = true; // Set this before stopping the motor
-                StartCoroutine(StopMotor());
             }
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
     }
 
     public IEnumerator MoveToAngleShortestDistance(float targetAngle, float rotationSpeed)
     {
         var angleDiff = Geometry.AngleModDiff(targetAngle, AngleDeg());
-        StartCoroutine(Math.Abs(angleDiff) < 180
-            ? MoveToAngleAt(targetAngle, -rotationSpeed)
-            : MoveToAngleAt(targetAngle, rotationSpeed));
+        StartCoroutine(MoveToAngleAt(targetAngle, Math.Abs(angleDiff) < 180 ? rotationSpeed : -rotationSpeed));
         yield return null;
     }
 
@@ -52,9 +68,9 @@ public class LegMotor : MonoBehaviour
     
     public string GetDebugInfo()
     {
+        
         return $"Current angle: {AngleDeg():F2}°\n" +
                $"Current velocity: {hingeJoint.velocity:F2}°/s\n" +
-               $"Current motor force: {hingeJoint.motor.force:F2}\n" +
                $"Target angle: {targetAngleDeg:F2}°\n" +
                $"Target velocity: {hingeJoint.motor.targetVelocity:F2}°/s\n" +
                $"Is motor enabled: {hingeJoint.useMotor}\n" +
@@ -75,7 +91,7 @@ public class LegMotor : MonoBehaviour
 
     private float AngleDeg()
     {
-        return 180f - transform.localRotation.eulerAngles.z;
+        return 180f - rigidbody.rotation.eulerAngles.z;
     }
 }
 

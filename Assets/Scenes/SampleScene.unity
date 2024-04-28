@@ -850,7 +850,7 @@ Transform:
   m_GameObject: {fileID: 8164078558438744155}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 2.39, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1284,7 +1284,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8164078558438744155}
   serializedVersion: 4
-  m_Mass: 2
+  m_Mass: 3
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -1296,10 +1296,10 @@ Rigidbody:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_ImplicitCom: 1
+  m_ImplicitCom: 0
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1409,7 +1409,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!64 &8164078558675050544
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1445,6 +1445,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hingeJoint: {fileID: 8164078558675050542}
+  rigidbody: {fileID: 8164078558675050543}
 --- !u!1 &8164078558718296930
 GameObject:
   m_ObjectHideFlags: 0
@@ -1532,7 +1533,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!64 &8164078558718296933
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1568,6 +1569,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hingeJoint: {fileID: 8164078558718296931}
+  rigidbody: {fileID: 8164078558718296932}
 --- !u!1 &8164078559369444614
 GameObject:
   m_ObjectHideFlags: 0
@@ -1655,7 +1657,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!64 &8164078559369444617
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1691,6 +1693,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hingeJoint: {fileID: 8164078559369444615}
+  rigidbody: {fileID: 8164078559369444616}
 --- !u!1 &8164078559481579746
 GameObject:
   m_ObjectHideFlags: 0
@@ -1778,7 +1781,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!64 &8164078559481579749
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1814,6 +1817,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hingeJoint: {fileID: 8164078559481579747}
+  rigidbody: {fileID: 8164078559481579748}
 --- !u!1 &8164078559596777536
 GameObject:
   m_ObjectHideFlags: 0
@@ -1901,7 +1905,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!64 &8164078559596777539
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1937,6 +1941,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hingeJoint: {fileID: 8164078559596777537}
+  rigidbody: {fileID: 8164078559596777538}
 --- !u!1 &8164078559875373840
 GameObject:
   m_ObjectHideFlags: 0
@@ -2024,7 +2029,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!64 &8164078559875373843
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -2060,6 +2065,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hingeJoint: {fileID: 8164078559875373841}
+  rigidbody: {fileID: 8164078559875373842}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
