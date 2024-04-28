@@ -6,6 +6,7 @@ public class LegMotor : MonoBehaviour
 {
     public new HingeJoint hingeJoint;
     private float targetAngleDeg;
+    public Rigidbody rb;
 
     public bool HasReachedTarget { get; private set; }
 
@@ -21,7 +22,7 @@ public class LegMotor : MonoBehaviour
         StartCoroutine(StartMotor(rotationSpeed));
         while (!HasReachedTarget)
         {
-            if (Math.Abs(targetAngle - AngleDeg()) < 20f)
+            if (Math.Abs(targetAngle - AngleDeg()) < 5f)
             {
                 HasReachedTarget = true; // Set this before stopping the motor
                 StartCoroutine(StopMotor());
@@ -45,7 +46,7 @@ public class LegMotor : MonoBehaviour
         hingeJoint.useMotor = true;
         var motor = hingeJoint.motor;
         motor.targetVelocity = -rotationSpeed;
-        motor.force = 50f;
+        motor.force = 100f;
         hingeJoint.motor = motor;
         yield return null;
     }
@@ -53,7 +54,7 @@ public class LegMotor : MonoBehaviour
     public string GetDebugInfo()
     {
         return $"Current angle: {AngleDeg():F2}°\n" +
-               $"Current velocity: {hingeJoint.velocity:F2}°/s\n" +
+               $"Current velocity: {RotationSpeed():F2}°/s\n" +
                $"Current motor force: {hingeJoint.motor.force:F2}\n" +
                $"Target angle: {targetAngleDeg:F2}°\n" +
                $"Target velocity: {hingeJoint.motor.targetVelocity:F2}°/s\n" +
@@ -64,18 +65,24 @@ public class LegMotor : MonoBehaviour
     private IEnumerator StopMotor()
     {
         // hingeJoint.useLimits = true;
-        hingeJoint.useMotor = false;
+        var motor = hingeJoint.motor;
+        motor.targetVelocity = 0f;
+        hingeJoint.motor = motor;
         // var limits = hingeJoint.limits;
         // var currentAngle = hingeJoint.angle;
-        // limits.min = currentAngle - 50f;
-        // limits.max = currentAngle + 50f;
+        // limits.min = currentAngle - 5f;
+        // limits.max = currentAngle + 5f;
         // hingeJoint.limits = limits;
         yield return null;
     }
 
     private float AngleDeg()
     {
-        return 180f - transform.localRotation.eulerAngles.z;
+        return 180f - rb.transform.localEulerAngles.z;
+    }
+
+    private float RotationSpeed() {
+        return rb.angularVelocity.z;
     }
 }
 
