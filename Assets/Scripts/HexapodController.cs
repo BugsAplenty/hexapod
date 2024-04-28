@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 public class HexapodController : MonoBehaviour
 {   
@@ -42,14 +43,19 @@ public class HexapodController : MonoBehaviour
             isWalking = true;
             if (restCoroutine != null)
             {
-                Debug.Log("Stopping rest coroutine");
                 StopCoroutine(restCoroutine);
             }
+            StartCoroutine(MoveToRest());
             walkCycleCoroutine = StartCoroutine(WalkCycle());
         }
         if (Input.GetKeyDown(KeyCode.A) && !isWalking)
         {
             isWalking = true;
+            if (restCoroutine != null)
+            {
+                StopCoroutine(restCoroutine);
+            }
+            StartCoroutine(PrepareTurn());
             walkCycleCoroutine = StartCoroutine(LeftTurnCycle());
         }
 
@@ -57,6 +63,11 @@ public class HexapodController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.D) && !isWalking)
         {
             isWalking = true;
+            if (restCoroutine != null)
+            {
+                StopCoroutine(restCoroutine);
+            }
+            StartCoroutine(PrepareTurn());
             walkCycleCoroutine = StartCoroutine(RightTurnCycle());
         }
 
@@ -64,6 +75,11 @@ public class HexapodController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.S) && !isWalking)
         {
             isWalking = true;
+            if (restCoroutine != null)
+            {
+                StopCoroutine(restCoroutine);
+            }
+            StartCoroutine(MoveToRest());
             walkCycleCoroutine = StartCoroutine(ReverseWalkCycle());
         }
         // Stop walking and move to rest when W is released or no keys are pressed
@@ -76,7 +92,8 @@ public class HexapodController : MonoBehaviour
                     StopCoroutine(walkCycleCoroutine);
                 }
                 StartCoroutine(MoveToRest());
-            } 
+            }
+            isWalking = false; 
         }
     }
 
@@ -89,15 +106,56 @@ public class HexapodController : MonoBehaviour
     
     private IEnumerator MoveToRest()
     {
-        var coroutines = LegMotors.Select(leg => StartCoroutine(leg.MoveToAngleShortestDistance(AngleLiftOff, ToRestSpeed))).ToList();
+        yield return StartCoroutine(MoveTripodsShortestDistance(AngleLiftOff, touchDownSpeed, AngleTouchDown, liftOffSpeed));
+        yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
+    }
 
-        // Wait for all legs to complete their movements to the rest position
-        foreach (var coroutine in coroutines)
+    private IEnumerator PrepareTurn()
+    {
+        yield return StartCoroutine(PreparTripodsForTurn(AngleLiftOff, touchDownSpeed, AngleTouchDown, liftOffSpeed));
+        yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
+    }
+
+    private IEnumerator PreparTripodsForTurn(float angleForTripod1, float speedForTripod1, float angleForTripod2, float speedForTripod2)
+    {
         {
-            yield return coroutine;
-        }
+            // For forward or reverse walking, move all legs normally
+            foreach (var leg in Tripod1)
+            {
+                if (leg == centerRight) {
+                    StartCoroutine(leg.MoveToAngleShortestDistance(angleForTripod2, -speedForTripod1));
+                } else {
+                    StartCoroutine(leg.MoveToAngleShortestDistance(angleForTripod1, speedForTripod1));
+                }
+            }
 
-        isWalking = false;
+            foreach (var leg in Tripod2)
+            {
+                if (leg == centerLeft) {
+                    StartCoroutine(leg.MoveToAngleShortestDistance(angleForTripod2, speedForTripod2));
+                } else {
+                    StartCoroutine(leg.MoveToAngleShortestDistance(angleForTripod1, -speedForTripod2));
+                }
+            }
+        }
+        yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
+    }
+
+    private IEnumerator MoveTripodsShortestDistance(float angleForTripod1, float speedForTripod1, float angleForTripod2, float speedForTripod2)
+    {
+        {
+            // For forward or reverse walking, move all legs normally
+            foreach (var leg in Tripod1)
+            {
+                StartCoroutine(leg.MoveToAngleShortestDistance(angleForTripod1, speedForTripod1));
+            }
+
+            foreach (var leg in Tripod2)
+            {
+                StartCoroutine(leg.MoveToAngleShortestDistance(angleForTripod2, speedForTripod2));
+            }
+        }
+        yield return new WaitUntil(() => LegMotors.All(leg => leg.HasReachedTarget));
     }
 
     private IEnumerator LeftTurnCycle()
